@@ -37,9 +37,11 @@
       <el-table-column label="备注说明" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
+          <el-button link type="primary" @click="getRegionInfo(scope.row)"
+            v-hasPermi="['manage:node:list']">查看详情</el-button> <!-- 新增详情按钮 -->
+          <el-button link type="primary" @click="handleUpdate(scope.row)"
             v-hasPermi="['manage:region:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"
+          <el-button link type="primary" @click="handleDelete(scope.row)"
             v-hasPermi="['manage:region:remove']">删除</el-button>
         </template>
       </el-table-column>
@@ -65,11 +67,30 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 【核心新增】区域详情对话框（带点位表格） -->
+    <el-dialog title="区域详情" v-model="regionInfoOpen" width="700px" append-to-body>
+      <!-- 区域基础信息 -->
+      <el-form ref="regionRef" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="区域名称" prop="regionName">
+          <el-input v-model="form.regionName" placeholder="请输入区域名称" disabled />
+        </el-form-item>
+      </el-form>
+      <label>点位列表:</label>
+
+      <el-table :data="nodeList">
+        <el-table-column label="序号" type="index" align="center" width="50" prop="id" />
+        <el-table-column label="点位名称" align="center" prop="nodeName" />
+        <el-table-column label="设备数量" align="center" prop="vmCount" />
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="Region">
 import { listRegion, getRegion, delRegion, addRegion, updateRegion } from "@/api/manage/region";
+import { listNode } from "@/api/manage/node";
+import { loadAllParams } from "@/api/page";
 
 const { proxy } = getCurrentInstance();
 
@@ -167,6 +188,24 @@ function handleUpdate(row) {
     open.value = true;
     title.value = "修改区域管理";
   });
+}
+
+/* 查看详情操作按钮 */
+const nodeList = ref([]);
+const regionInfoOpen = ref(false);
+function getRegionInfo(row) {
+  // 查询区域信息
+  reset();
+  const _id = row.id
+  getRegion(_id).then(response => {
+    form.value = response.data;
+  });
+  // 查看点位列表
+  loadAllParams.regionId = row.id
+  listNode(loadAllParams).then(response => {
+    nodeList.value = response.rows;
+  });
+  regionInfoOpen.value = true;
 }
 
 /** 提交按钮 */

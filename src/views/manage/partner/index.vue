@@ -34,6 +34,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" type="index" align="center" width="50" prop="id" />
       <el-table-column label="合作商名称" align="center" prop="partnerName" />
+      <el-table-column label="点位数" align="center" width="55" prop="nodeCount" />
       <el-table-column label="账号" align="center" prop="account" />
       <el-table-column label="分成比例" align="center" prop="commissionRate">
         <!-- 添加百分号 -->
@@ -43,8 +44,12 @@
       </el-table-column>
       <el-table-column label="联系人" align="center" prop="contactPerson" />
       <el-table-column label="联系电话" align="center" prop="contactPhone" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="300px" class-name="small-padding fixed-width">
         <template #default="scope">
+          <el-button link type="primary" @click="resetPwd(scope.row)"
+            v-hasPermi="['manage:partner:edit']">重置密码</el-button>
+          <el-button link type="primary" @click="getPartnerInfo(scope.row)"
+            v-hasPermi="['manage:partner:query']">查看详情</el-button>
           <el-button link type="primary" @click="handleUpdate(scope.row)"
             v-hasPermi="['manage:partner:edit']">修改</el-button>
           <el-button link type="primary" @click="handleDelete(scope.row)"
@@ -88,11 +93,24 @@
         </div>
       </template>
     </el-dialog>
+
+
+    <!-- 查看合作商对话框 -->
+    <el-dialog title="合作商详情" v-model="partnerInfoOpen" width="500px" append-to-body>
+      <el-descriptions column="2" border size="small">
+        <el-descriptions-item label="合作商名称">{{ partnerInfo.partnerName || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="联系人">{{ partnerInfo.contactPerson || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="联系电话">{{ partnerInfo.contactPhone || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="分成比例">{{ partnerInfo.commissionRate ? partnerInfo.commissionRate + '%' : '无'
+        }}</el-descriptions-item>
+      </el-descriptions>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="Partner">
-import { listPartner, getPartner, delPartner, addPartner, updatePartner } from "@/api/manage/partner";
+import { listPartner, getPartner, delPartner, addPartner, updatePartner, resetPartnerPwd } from "@/api/manage/partner";
+import { getCurrentInstance, ref, reactive, toRefs, onMounted } from 'vue';
 
 const { proxy } = getCurrentInstance();
 
@@ -105,6 +123,8 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
+const partnerInfoOpen = ref(false);
+const partnerInfo = ref({}); // 专门用于存储查看详情的合作商信息
 
 const data = reactive({
   form: {},
@@ -208,6 +228,15 @@ function handleUpdate(row) {
     title.value = "修改合作商管理";
   });
 }
+/** 查看详情按钮操作 */
+function getPartnerInfo(row) {
+  const _id = row.id;
+  getPartner(_id).then(response => {
+    partnerInfo.value = response.data; // 将数据存储到专门的partnerInfo变量
+    partnerInfoOpen.value = true;
+  });
+}
+
 
 /** 提交按钮 */
 function submitForm() {
@@ -240,7 +269,16 @@ function handleDelete(row) {
     proxy.$modal.msgSuccess("删除成功");
   }).catch(() => { });
 }
-
+//重置合作商密码
+function resetPwd(row) {
+  const _ids = row.id || ids.value;
+  proxy.$modal.confirm('是否确认重置合作商编号为"' + _ids + '"的密码？').then(function () {
+    return resetPartnerPwd(_ids);
+  }).then(() => {
+    getList();
+    proxy.$modal.msgSuccess("重置成功");
+  }).catch(() => { });
+}
 /** 导出按钮操作 */
 function handleExport() {
   proxy.download('manage/partner/export', {
