@@ -127,5 +127,4 @@ const orderCount = () => {
 
 // .bgc2 {
 //   background: #FBEFE8 url('~@/assets/home/sale.png') no-repeat calc(100% - 12px) 100%;
-// }
-</style>
+// }</style>

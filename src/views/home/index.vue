@@ -44,12 +44,14 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
     font-size: 17.5px;
     border-left: 5px solid #eee;
   }
+
   hr {
     margin-top: 20px;
     margin-bottom: 20px;
     border: 0;
     border-top: 1px solid #eee;
   }
+
   .col-item {
     margin-bottom: 20px;
   }
@@ -59,7 +61,11 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
     margin: 0;
   }
 
-  font-family: 'open sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'open sans',
+  'Helvetica Neue',
+  Helvetica,
+  Arial,
+  sans-serif;
   font-size: 13px;
   color: #676a6c;
   overflow-x: hidden;
@@ -97,24 +103,29 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
       padding-inline-start: 40px;
     }
   }
+
   :deep(.box) {
     padding: 20px;
     border-radius: 20px;
+
     .title,
     .header {
       display: flex;
-      .el-icon{
+
+      .el-icon {
         cursor: pointer;
       }
     }
+
     .title {
       align-items: center;
       flex: 1;
       font-size: 16px;
       font-weight: 600;
       color: #333;
-      
+
     }
+
     .sub-title {
       margin-left: 10px;
       font-size: 12px;
@@ -122,12 +133,14 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
       color: #999;
     }
   }
+
   .chart {
     position: relative;
     display: inline-block;
     width: 50%;
     height: 100%;
   }
+
   .sku-sale-rank {
     flex-direction: column;
     height: calc(60vh - 72px);

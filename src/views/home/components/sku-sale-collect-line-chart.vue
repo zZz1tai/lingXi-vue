@@ -1,10 +1,6 @@
 <template>
   <div class="chart">
-    <div
-      id="chart"
-      class="monitorContainer"
-      :class="chartOption.xAxisData.length > 0 ? 'show' : 'hidden'"
-    />
+    <div id="chart" class="monitorContainer" :class="chartOption.xAxisData.length > 0 ? 'show' : 'hidden'" />
     <empty-data-chart :is-empty="chartOption.xAxisData.length === 0" />
   </div>
 </template>
@@ -15,7 +11,7 @@ import EmptyDataChart from '@/components/empty-data-chart/index.vue';
 const props = defineProps({
   chartOption: {
     type: Object,
-    default: () => {},
+    default: () => { },
   },
 });
 // 定义变量

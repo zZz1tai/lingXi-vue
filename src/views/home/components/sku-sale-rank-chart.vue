@@ -30,66 +30,66 @@ import { onMounted } from 'vue';
 import dayjs from 'dayjs';
 // 定义变量
 const skuSaleRank = ref([
-    {
-        "skuId": "0",
-        "skuName": "茉莉花茶",
-        "count": 820,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "星巴克",
-        "count": 762,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "可口可乐",
-        "count": 749,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "怡宝",
-        "count": 742,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "100橙汁自然纯",
-        "count": 718,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "青梅绿茶",
-        "count": 714,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "统一阿萨姆奶茶",
-        "count": 700,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "康师傅冰红茶",
-        "count": 673,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "泡面1",
-        "count": 422,
-        "amount": 0
-    },
-    {
-        "skuId": "0",
-        "skuName": "苹果手机",
-        "count": 348,
-        "amount": 0
-    }
+  {
+    "skuId": "0",
+    "skuName": "茉莉花茶",
+    "count": 820,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "星巴克",
+    "count": 762,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "可口可乐",
+    "count": 749,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "怡宝",
+    "count": 742,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "100橙汁自然纯",
+    "count": 718,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "青梅绿茶",
+    "count": 714,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "统一阿萨姆奶茶",
+    "count": 700,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "康师傅冰红茶",
+    "count": 673,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "泡面1",
+    "count": 422,
+    "amount": 0
+  },
+  {
+    "skuId": "0",
+    "skuName": "苹果手机",
+    "count": 348,
+    "amount": 0
+  }
 ])
 const start = dayjs().startOf('month').format('YYYY.MM.DD');
 const end = dayjs().endOf('day').format('YYYY.MM.DD');

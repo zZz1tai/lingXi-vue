@@ -67,7 +67,7 @@ const userTaskStats = ref([
     total: 6,
     completedTotal: 4,
     cancelTotal: 1,
-    progressTotal:1,
+    progressTotal: 1,
     workerCount: 12,
     repair: true,
     date: null,
