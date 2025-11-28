@@ -107,10 +107,15 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
   :deep(.box) {
     padding: 20px;
     border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 
     .title,
     .header {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
 
       .el-icon {
         cursor: pointer;
@@ -123,7 +128,6 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
       font-size: 16px;
       font-weight: 600;
       color: #333;
-
     }
 
     .sub-title {
@@ -139,14 +143,6 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
     display: inline-block;
     width: 50%;
     height: 100%;
-  }
-
-  .sku-sale-rank {
-    flex-direction: column;
-    height: calc(60vh - 72px);
-    min-height: 538px;
-    background: #fff;
-    border-radius: 20px;
   }
 }
 </style>

@@ -4,9 +4,42 @@
     <empty-data-chart :is-empty="chartOption.xAxisData.length === 0" />
   </div>
 </template>
+<style lang="scss" scoped>
+.chart {
+  position: relative;
+  display: inline-block;
+  width: 50%;
+  height: 100%;
+}
+
+.monitorContainer {
+  width: 100%;
+  height: 100%;
+  min-height: 250px;
+
+  & > div {
+    &:first-child {
+      width: 100% !important;
+
+      & > canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+  }
+}
+
+.show {
+  visibility: visible;
+}
+
+.hidden {
+  visibility: hidden;
+}
+</style>
 <script setup>
 import * as echarts from 'echarts';
-import { onMounted } from 'vue';
+import { onMounted, nextTick } from 'vue';
 import EmptyDataChart from '@/components/empty-data-chart/index.vue';
 const props = defineProps({
   chartOption: {

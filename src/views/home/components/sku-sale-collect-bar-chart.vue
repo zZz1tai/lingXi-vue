@@ -6,7 +6,7 @@
 </template>
 <script setup>
 import * as echarts from 'echarts';
-import { onMounted } from 'vue';
+import { onMounted, nextTick } from 'vue';
 const props = defineProps({
   chartOption: {
     type: Object,
@@ -121,7 +121,8 @@ const getSeriesOption = () => {
         barBorderRadius: [4, 4, 0, 0],
       },
       barWidth: 14,
-      barGap: '100%',
+      barGap: '20%',
+      barCategoryGap: '40%',
     },
   ];
 };
@@ -133,9 +134,11 @@ const getSeriesOption = () => {
   width: 50%;
   height: 100%;
 }
+
 .monitorContainer {
   width: 100%;
-  height: 300px;
+  height: 100%;
+  min-height: 250px;
 
   & > div {
     &:first-child {
@@ -143,10 +146,12 @@ const getSeriesOption = () => {
 
       & > canvas {
         width: 100% !important;
+        height: 100% !important;
       }
     }
   }
 }
+
 .show {
   visibility: visible;
 }

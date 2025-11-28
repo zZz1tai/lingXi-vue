@@ -5,81 +5,86 @@
         工单统计<span class="sub-title">{{ start }} ~ {{ end }}</span>
       </div>
     </div>
-    <div v-if="userTaskStats.length" class="body">
-      <div class="stats">
-        <div class="item">
-          <div class="num color1 text-shadow1">
-            {{ userTaskStats[0].total + userTaskStats[1].total }}
+    <div class="body">
+      <el-skeleton v-if="loading" :rows="4" animated />
+      <div v-else-if="userTaskStats.length" class="stats-container">
+        <div class="stats">
+          <div class="item">
+            <div class="num color1 text-shadow1">
+              {{ userTaskStats[0].total + userTaskStats[1].total }}
+            </div>
+            <div class="text color2">工单总数（个）</div>
           </div>
-          <div class="text color2">工单总数（个）</div>
+        </div>
+        <div class="stats">
+          <div class="item">
+            <div class="num color1 text-shadow1">
+              {{ 
+                userTaskStats[0].completedTotal + userTaskStats[1].completedTotal 
+              }}
+            </div>
+            <div class="text color2">完成工单（个）</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="item">
+            <div class="num color1 text-shadow1">
+              {{ 
+                userTaskStats[0].progressTotal + userTaskStats[1].progressTotal 
+              }}
+            </div>
+            <div class="text color2">进行工单（个）</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="item">
+            <div class="num color1 text-shadow1">
+              {{ userTaskStats[0].cancelTotal + userTaskStats[1].cancelTotal }}
+            </div>
+            <div class="text color2">取消工单（个）</div>
+          </div>
         </div>
       </div>
-      <div class="stats">
-        <div class="item">
-          <div class="num color1 text-shadow1">
-            {{
-              userTaskStats[0].completedTotal + userTaskStats[1].completedTotal
-            }}
-          </div>
-          <div class="text color2">完成工单（个）</div>
-        </div>
-      </div>
-      <div class="stats">
-        <div class="item">
-          <div class="num color1 text-shadow1">
-            {{
-              userTaskStats[0].progressTotal + userTaskStats[1].progressTotal
-            }}
-          </div>
-          <div class="text color2">进行工单（个）</div>
-        </div>
-      </div>
-      <div class="stats">
-        <div class="item">
-          <div class="num color1 text-shadow1">
-            {{ userTaskStats[0].cancelTotal + userTaskStats[1].cancelTotal }}
-          </div>
-          <div class="text color2">取消工单（个）</div>
-        </div>
+      <div v-else class="empty">
+        <el-empty description="暂无数据" />
       </div>
     </div>
   </div>
 </template>
 <script setup>
+import { ref, onMounted } from 'vue';
 import dayjs from 'dayjs';
+import { getTaskStats } from '@/api/manage/dashboard';
+
 // 定义变量
 const repair = ref(false);
-const orderCountNum = ref(0);
-const orderAmountNum = ref(0);
 const start = dayjs().startOf('month').format('YYYY.MM.DD');
 const end = dayjs().endOf('day').format('YYYY.MM.DD');
-const userTaskStats = ref([
-  {
-    total: 6,
-    completedTotal: 4,
-    cancelTotal: 1,
-    progressTotal: 1,
-    workerCount: 16,
-    repair: false,
-    date: null,
-  },
-  {
-    total: 6,
-    completedTotal: 4,
-    cancelTotal: 1,
-    progressTotal: 1,
-    workerCount: 12,
-    repair: true,
-    date: null,
-  },
-]);
-// 定义方法
-const orderCount = () => {
-  const month = {
-    start: dayjs().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
-    end: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
-  };
+const userTaskStats = ref([]);
+const loading = ref(true);
+
+// 获取工单统计数据
+const fetchTaskStats = async () => {
+  try {
+    loading.value = true;
+    const month = {
+      start: dayjs().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+      end: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+    };
+    const response = await getTaskStats(month);
+    userTaskStats.value = response.data || [];
+  } catch (error) {
+    console.error('获取工单统计数据失败:', error);
+    userTaskStats.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchTaskStats();
+});
 </script>
 <style lang="scss" scoped>
 // TODO: 首页、人效统计、对账统计样式抽出组件
@@ -95,6 +100,12 @@ const orderCount = () => {
     flex: 1;
     display: flex;
 
+    .stats-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+
     .stats {
       flex: 1;
       display: flex;
@@ -104,6 +115,7 @@ const orderCount = () => {
       .item {
         display: inline-flex; // 关键点
         flex-direction: column;
+        align-items: center;
 
         .num {
           height: 50px;

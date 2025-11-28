@@ -6,16 +6,18 @@
     </div>
     <el-row :gutter="20" type="flex" align="middle" class="body">
       <el-col :span="17">
-        <partner-node-collect-pie-chart :chart-option="pieChartOption" />
+        <el-skeleton v-if="loading" :rows="1" animated style="width: 100%; height: 250px" />
+        <partner-node-collect-pie-chart v-else :chart-option="pieChartOption" />
       </el-col>
       <el-col :span="7">
-        <div class="collect">
+        <el-skeleton v-if="loading" :rows="4" animated />
+        <div v-else class="collect">
           <div class="count">
-            16
+            {{ totalNodes }}
           </div>
           <div class="name">点位数</div>
           <div class="count count2">
-            5
+            {{ totalPartners }}
           </div>
           <div class="name">合作商数</div>
         </div>
@@ -24,31 +26,52 @@
   </div>
 </template>
 <script setup>
-import PartnerNodeCollectPieChart from './partner-node-collect-pie-chart.vue'
+import { ref, onMounted } from 'vue';
+import PartnerNodeCollectPieChart from './partner-node-collect-pie-chart.vue';
+import { getPartnerNodeCollect } from '@/api/manage/dashboard';
+
 // 定义变量
+const loading = ref(true);
+const totalNodes = ref(0);
+const totalPartners = ref(0);
 const pieChartOption = ref({
-  seriesData: [
-    {
-      name: '金燕龙合作商',
-      value: 10,
-    },
-    {
-      name: '天华物业',
-      value: 2,
-    },
-    {
-      name: '北京合作商',
-      value: 2,
-    },
-    {
-      name: 'likede',
-      value: 1,
-    },
-    {
-      name: '佳佳',
-      value: 1,
-    },
-  ],
+  seriesData: [],
+});
+
+// 获取合作商节点汇总数据
+const fetchPartnerNodeCollect = async () => {
+  try {
+    loading.value = true;
+    const response = await getPartnerNodeCollect();
+    const data = response.data || {};
+    
+    pieChartOption.value = {
+      seriesData: data.seriesData || [],
+    };
+    
+    totalNodes.value = data.totalNodes || 0;
+    totalPartners.value = data.totalPartners || 0;
+  } catch (error) {
+    console.error('获取合作商节点汇总数据失败:', error);
+    pieChartOption.value = {
+      seriesData: [],
+    };
+    totalNodes.value = 0;
+    totalPartners.value = 0;
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 处理更多点击事件
+const handleMoreClick = () => {
+  // 这里可以添加跳转到更多详情页面的逻辑
+  console.log('查看更多合作商节点数据');
+};
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchPartnerNodeCollect();
 });
 </script>
 <style scoped>

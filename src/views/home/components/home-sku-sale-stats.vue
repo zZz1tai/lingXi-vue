@@ -6,25 +6,28 @@
       </div>
     </div>
     <div class="body">
-      <div class="stats">
-        <div class="item">
-          <div class="num color3 text-shadow2">
-            {{ orderCountNum }}
+      <el-skeleton v-if="loading" :rows="2" animated />
+      <div v-else class="stats-container">
+        <div class="stats">
+          <div class="item">
+            <div class="num color3 text-shadow2">
+              {{ orderCountNum }}
+            </div>
+            <div class="text color4">订单量（个）</div>
           </div>
-          <div class="text color4">订单量（个）</div>
         </div>
-      </div>
-      <div class="stats">
-        <div class="item">
-          <div class="num color3 text-shadow2">
-            {{
-              orderAmountNum > 10000
-                ? (orderAmountNum / 10000).toFixed(2)
-                : orderAmountNum
-            }}
-          </div>
-          <div class="text color4">
-            销售额（{{ orderAmountNum > 10000 ? '万元' : '元' }}）
+        <div class="stats">
+          <div class="item">
+            <div class="num color3 text-shadow2">
+              {{ 
+                orderAmountNum > 10000 
+                  ? (orderAmountNum / 10000).toFixed(2) 
+                  : orderAmountNum 
+              }}
+            </div>
+            <div class="text color4">
+              销售额（{{ orderAmountNum > 10000 ? '万元' : '元' }}）
+            </div>
           </div>
         </div>
       </div>
@@ -32,20 +35,43 @@
   </div>
 </template>
 <script setup>
+import { ref, onMounted } from 'vue';
 import dayjs from 'dayjs';
+import { getSaleStats } from '@/api/manage/dashboard';
+
 // 定义变量
 const repair = ref(false);
-const orderCountNum = ref(7358);
-const orderAmountNum = ref(7351);
+const orderCountNum = ref(0);
+const orderAmountNum = ref(0);
 const start = dayjs().startOf('month').format('YYYY.MM.DD');
 const end = dayjs().endOf('day').format('YYYY.MM.DD');
-// 定义方法
-const orderCount = () => {
-  const month = {
-    start: dayjs().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
-    end: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
-  };
+const loading = ref(true);
+
+// 获取销售统计数据
+const fetchSaleStats = async () => {
+  try {
+    loading.value = true;
+    const month = {
+      start: dayjs().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+      end: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+    };
+    const response = await getSaleStats(month);
+    const data = response.data || {};
+    orderCountNum.value = data.orderCount || 0;
+    orderAmountNum.value = data.orderAmount || 0;
+  } catch (error) {
+    console.error('获取销售统计数据失败:', error);
+    orderCountNum.value = 0;
+    orderAmountNum.value = 0;
+  } finally {
+    loading.value = false;
+  }
 };
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchSaleStats();
+});
 </script>
 <style lang="scss" scoped>
 .home-sku-sale-stats {
@@ -53,12 +79,18 @@ const orderCount = () => {
   flex-direction: column;
   height: calc((100vh - 120px) * 0.2);
   min-height: 166px;
-  background: #E9F3FF;
+  background: #FBEFE8;
   border-radius: 20px;
 
   .body {
     flex: 1;
     display: flex;
+
+    .stats-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
 
     .stats {
       flex: 1;
@@ -69,6 +101,7 @@ const orderCount = () => {
       .item {
         display: inline-flex; // 关键点
         flex-direction: column;
+        align-items: center;
 
         .num {
           height: 50px;
@@ -76,7 +109,7 @@ const orderCount = () => {
           font-family: PingFangSC-Semibold, PingFang SC;
           font-weight: 600;
           line-height: 50px;
-          text-shadow: 2px 4px 7px rgba(85, 132, 255, 0.5);
+          text-shadow: 2px 4px 7px rgba(255, 99, 85, 0.5);
         }
 
         .text {
@@ -85,7 +118,7 @@ const orderCount = () => {
           font-size: 12px;
           font-family: PingFangSC-Regular, PingFang SC;
           font-weight: 400;
-          color: #91a7dc;
+          color: #de9690;
           line-height: 17px;
         }
 

@@ -7,92 +7,63 @@
       </div>
     </div>
     <div class="body">
-      <el-row v-for="(item, index) in skuSaleRank" :key="index">
-        <el-col :span="5">
-          <div :class="'top top' + (index + 1)">
-            {{ index + 1 }}
-          </div>
-        </el-col>
-        <el-col :span="13">
-          <div class="sku-name" :title="item.skuName">
-            {{ item.skuName }}
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="count">{{ item.count }}单</div>
-        </el-col>
-      </el-row>
+      <el-skeleton v-if="loading" :rows="10" animated />
+      <div v-else-if="skuSaleRank.length">
+        <el-row v-for="(item, index) in skuSaleRank" :key="item.skuId || index">
+          <el-col :span="5">
+            <div :class="'top top' + (index + 1)">
+              {{ index + 1 }}
+            </div>
+          </el-col>
+          <el-col :span="13">
+            <div class="sku-name" :title="item.skuName">
+              {{ item.skuName }}
+            </div>
+          </el-col>
+          <el-col :span="6">
+            <div class="count">{{ item.count }}单</div>
+          </el-col>
+        </el-row>
+      </div>
+      <div v-else class="empty">
+        <el-empty description="暂无数据" />
+      </div>
     </div>
   </div>
 </template>
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import dayjs from 'dayjs';
+import { getSkuSaleRank } from '@/api/manage/dashboard';
+
 // 定义变量
-const skuSaleRank = ref([
-  {
-    "skuId": "0",
-    "skuName": "茉莉花茶",
-    "count": 820,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "星巴克",
-    "count": 762,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "可口可乐",
-    "count": 749,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "怡宝",
-    "count": 742,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "100橙汁自然纯",
-    "count": 718,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "青梅绿茶",
-    "count": 714,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "统一阿萨姆奶茶",
-    "count": 700,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "康师傅冰红茶",
-    "count": 673,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "泡面1",
-    "count": 422,
-    "amount": 0
-  },
-  {
-    "skuId": "0",
-    "skuName": "苹果手机",
-    "count": 348,
-    "amount": 0
-  }
-])
+const skuSaleRank = ref([]);
 const start = dayjs().startOf('month').format('YYYY.MM.DD');
 const end = dayjs().endOf('day').format('YYYY.MM.DD');
+const loading = ref(true);
+
+// 获取SKU销售排名数据
+const fetchSkuSaleRank = async () => {
+  try {
+    loading.value = true;
+    const month = {
+      start: dayjs().startOf('month').format('YYYY-MM-DD HH:mm:ss'),
+      end: dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss'),
+    };
+    const response = await getSkuSaleRank(month);
+    skuSaleRank.value = response.data || [];
+  } catch (error) {
+    console.error('获取SKU销售排名数据失败:', error);
+    skuSaleRank.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchSkuSaleRank();
+});
 </script>
 <style lang="scss" scoped>
 @import '@/assets/styles/variables.module.scss';
@@ -109,8 +80,15 @@ const end = dayjs().endOf('day').format('YYYY.MM.DD');
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin-top: 20px;
+    padding: 0 10px;
+
+    > div:not(.empty) {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
 
     .top {
       display: inline-block;
@@ -147,23 +125,23 @@ const end = dayjs().endOf('day').format('YYYY.MM.DD');
     }
 
     .sku-name {
-      height: 20px;
-      font-size: 14px;
+      height: 24px;
+      font-size: 16px;
       font-weight: 500;
       color: $--color-text-primary;
-      line-height: 20px;
+      line-height: 24px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
     }
 
     .count {
-      height: 20px;
-      font-size: 14px;
+      height: 24px;
+      font-size: 16px;
       font-family: PingFangSC-Regular, PingFang SC;
       font-weight: 400;
       color: #737589;
-      line-height: 20px;
+      line-height: 24px;
       text-align: right;
     }
   }
