@@ -39,7 +39,7 @@
 </style>
 <script setup>
 import * as echarts from 'echarts';
-import { onMounted, nextTick } from 'vue';
+import { onMounted, nextTick, ref } from 'vue';
 import EmptyDataChart from '@/components/empty-data-chart/index.vue';
 const props = defineProps({
   chartOption: {
@@ -166,7 +166,7 @@ const getSeriesOption = () => {
         shadowOffsetY: 8,
       },
       areaStyle: {
-        color: areaStyleColor.value,
+        color: areaStyleColor,
       },
     },
   ];
