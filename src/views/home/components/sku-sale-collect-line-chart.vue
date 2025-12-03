@@ -10,12 +10,14 @@
   display: inline-block;
   width: 50%;
   height: 100%;
+  min-width: 0; // 防止 flex 子元素溢出
 }
 
 .monitorContainer {
   width: 100%;
   height: 100%;
   min-height: 250px;
+  min-width: 0; // 防止溢出
 
   & > div {
     &:first-child {
@@ -24,6 +26,7 @@
       & > canvas {
         width: 100% !important;
         height: 100% !important;
+        max-width: 100%; // 确保不超出容器
       }
     }
   }
@@ -39,7 +42,7 @@
 </style>
 <script setup>
 import * as echarts from 'echarts';
-import { onMounted, nextTick, ref } from 'vue';
+import { onMounted, onUnmounted, nextTick, ref, watch } from 'vue';
 import EmptyDataChart from '@/components/empty-data-chart/index.vue';
 const props = defineProps({
   chartOption: {
@@ -48,6 +51,7 @@ const props = defineProps({
   },
 });
 // 定义变量
+let myChart = null;
 // 坐标轴颜色
 const axisStyleColor1 = ref('#D9D9D9');
 const axisStyleColor2 = ref('#999999');
@@ -59,12 +63,39 @@ const areaStyleColor = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
   { offset: 0.3, color: 'rgba(255, 169, 169, 0.3)' },
   { offset: 1, color: 'rgba(255, 169, 169, 0)' },
 ]);
+
+// 窗口大小变化时调整图表
+const handleResize = () => {
+  if (myChart) {
+    myChart.resize();
+  }
+};
+
 onMounted(() => {
   setOption();
+  window.addEventListener('resize', handleResize);
 });
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  if (myChart) {
+    myChart.dispose();
+    myChart = null;
+  }
+});
+
+// 监听数据变化，更新图表
+watch(() => props.chartOption, () => {
+  if (myChart) {
+    setOption();
+  }
+}, { deep: true });
 const setOption = () => {
   const chartDom = document.getElementById('chart');
-  const myChart = echarts.init(chartDom);
+  if (!chartDom) return;
+  if (!myChart) {
+    myChart = echarts.init(chartDom);
+  }
   let option = null;
   const grid = {
     left: '30',

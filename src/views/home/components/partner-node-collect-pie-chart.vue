@@ -3,11 +3,13 @@
 </template>
 <script setup>
 import * as echarts from 'echarts';
-import { onMounted } from 'vue';
+import { onMounted, onUnmounted, nextTick, ref, watch } from 'vue';
 const width = ref('100%');
 const height = ref('300px');
 const chart = ref('chart');
 const EcharRef = ref(null);
+// 定义变量
+let myChart = null;
 // 获取父组件数据
 const props = defineProps({
   chartOption: {
@@ -15,12 +17,39 @@ const props = defineProps({
     default: () => ({}),
   },
 });
+
+// 窗口大小变化时调整图表
+const handleResize = () => {
+  if (myChart) {
+    myChart.resize();
+  }
+};
+
 onMounted(() => {
   setOption();
+  window.addEventListener('resize', handleResize);
 });
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  if (myChart) {
+    myChart.dispose();
+    myChart = null;
+  }
+});
+
+// 监听数据变化，更新图表
+watch(() => props.chartOption, () => {
+  if (myChart) {
+    setOption();
+  }
+}, { deep: true });
 const setOption = () => {
   const chartDom = document.getElementById('chartTop');
-  const myChart = echarts.init(chartDom);
+  if (!chartDom) return;
+  if (!myChart) {
+    myChart = echarts.init(chartDom);
+  }
   let option = null;
   nextTick(() => {
     setTimeout(() => {
@@ -75,3 +104,23 @@ const setOption = () => {
   });
 };
 </script>
+<style lang="scss" scoped>
+.monitorContainer {
+  width: 100%;
+  height: 100%;
+  min-height: 250px;
+  min-width: 0; // 防止溢出
+
+  & > div {
+    &:first-child {
+      width: 100% !important;
+
+      & > canvas {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100%; // 确保不超出容器
+      }
+    }
+  }
+}
+</style>

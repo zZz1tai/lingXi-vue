@@ -6,25 +6,54 @@
 </template>
 <script setup>
 import * as echarts from 'echarts';
-import { onMounted, nextTick } from 'vue';
+import { onMounted, onUnmounted, nextTick, ref, watch } from 'vue';
 const props = defineProps({
   chartOption: {
     type: Object,
     default: () => {},
   },
 });
+// 定义变量
+let myChart = null;
 // 坐标轴的颜色
 const axisColor = ref('#D9D9D9');
 const axisColor2 = ref('#999999');
 // 柱条的颜色
 const itemStyleColor = ref('#91B0FF');
+
+// 窗口大小变化时调整图表
+const handleResize = () => {
+  if (myChart) {
+    myChart.resize();
+  }
+};
+
 onMounted(() => {
   setOption();
+  window.addEventListener('resize', handleResize);
 });
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  if (myChart) {
+    myChart.dispose();
+    myChart = null;
+  }
+});
+
+// 监听数据变化，更新图表
+watch(() => props.chartOption, () => {
+  if (myChart) {
+    setOption();
+  }
+}, { deep: true });
 const setOption = () => {
-  const chartDom = document.getElementById('chartId')
-  const myChart = echarts.init(chartDom)
-  let option = null
+  const chartDom = document.getElementById('chartId');
+  if (!chartDom) return;
+  if (!myChart) {
+    myChart = echarts.init(chartDom);
+  }
+  let option = null;
   const grid = {
     left: '33',
     right: '30',
@@ -133,12 +162,14 @@ const getSeriesOption = () => {
   display: inline-block;
   width: 50%;
   height: 100%;
+  min-width: 0; // 防止 flex 子元素溢出
 }
 
 .monitorContainer {
   width: 100%;
   height: 100%;
   min-height: 250px;
+  min-width: 0; // 防止溢出
 
   & > div {
     &:first-child {
@@ -147,6 +178,7 @@ const getSeriesOption = () => {
       & > canvas {
         width: 100% !important;
         height: 100% !important;
+        max-width: 100%; // 确保不超出容器
       }
     }
   }

@@ -19,17 +19,17 @@
           'text-align': 'left',
           color: '#999999',
         }">
-        <el-table-column label="故障时间" width="160px">
+        <el-table-column label="故障时间" min-width="160">
           <template #default="scope">
             <span>{{ scope.row.updateTime }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="设备地址" show-overflow-tooltip>
+        <el-table-column label="设备地址" show-overflow-tooltip min-width="200">
           <template #default="scope">
             <span>{{ scope.row.addr }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="设备编号" width="120px">
+        <el-table-column label="设备编号" min-width="120">
           <template #default="scope">
             <span>{{ scope.row.innerCode }}</span>
           </template>
@@ -117,11 +117,13 @@ onMounted(() => {
   .table-container {
     height: 100%;
     overflow: auto;
+    min-width: 0; // 防止 flex 子元素溢出
 
     :deep(.el-table) {
       height: 100%;
       display: flex;
       flex-direction: column;
+      min-width: 480px; // 设置表格最小宽度，防止过度压缩
 
       .el-table__header-wrapper {
         flex-shrink: 0;
@@ -130,6 +132,16 @@ onMounted(() => {
       .el-table__body-wrapper {
         flex: 1;
         overflow: auto;
+      }
+
+      .el-table__header,
+      .el-table__body {
+        width: 100% !important;
+      }
+
+      .el-table__header th,
+      .el-table__body td {
+        white-space: nowrap;
       }
     }
   }

@@ -144,5 +144,14 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
     width: 50%;
     height: 100%;
   }
+
+  // 防止表格在缩放时变形
+  :deep(.el-row) {
+    min-width: 0;
+  }
+
+  :deep(.el-col) {
+    min-width: 0;
+  }
 }
 </style>
