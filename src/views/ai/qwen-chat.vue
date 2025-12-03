@@ -1,81 +1,76 @@
 <template>
   <div class="ai-chat-page app-container">
     <el-row :gutter="20">
-      <el-col :span="17">
-        <el-card class="dialog-card" v-loading="loading && !history.length">
-          <template #header>
-            <div class="card-header">
-              <div>
-                <div class="title">灵犀智能助手</div>
+      <el-col :span="24">
+        <div class="dialog-card-wrapper">
+          <el-card class="dialog-card" v-loading="loading && !history.length" :body-style="{ padding: '0' }">
+            <template #header>
+              <div class="card-header">
+                <div>
+                  <!-- 删除左边的灵犀智能助手标题 -->
+                </div>
+                <el-button size="small" @click="clearHistory" :disabled="!history.length">清空记录</el-button>
               </div>
-              <el-button size="small" @click="clearHistory" :disabled="!history.length">清空记录</el-button>
-            </div>
-          </template>
-          <div ref="historyWrap" class="messages">
-            <div v-if="!history.length && !loading" class="empty-state">
-              <p>还没有消息，输入内容后点击 “发送” 或使用 Ctrl + Enter。</p>
-            </div>
-            <div
-              v-for="item in history"
-              :key="item.id"
-              class="message"
-              :class="item.role"
-            >
-              <div class="meta">
-                <span class="role">{{ item.role === 'user' ? '我' : '灵犀' }}</span>
-                <span class="time">{{ item.time }}</span>
+            </template>
+            <div ref="historyWrap" class="messages">
+              <div v-if="!history.length && !loading" class="empty-state">
+                <h2 class="welcome-title">你好，我是灵犀</h2>
               </div>
-              <div class="content">{{ item.content }}</div>
+              <div
+                v-for="item in history"
+                :key="item.id"
+                class="message"
+                :class="item.role"
+              >
+                <div class="meta">
+                  <span class="role">{{ item.role === 'user' ? '' : '灵犀' }}</span>
+                  <span class="time">{{ item.time }}</span>
+                </div>
+                <div class="content">{{ item.content }}</div>
+              </div>
+            </div>
+          </el-card>
+        </div>
+        <div class="input-wrapper">
+          <div class="input-container">
+            <div class="input-area">
+              <el-input
+                v-model="message"
+                type="textarea"
+                :autosize="{ minRows: 2, maxRows: 4 }"
+                :placeholder="enableDataAnalysis ? '请输入要分析的问题，将基于数据看板进行智能分析' : '向灵犀助手提问'"
+                @keydown.enter="handleEnter"
+              />
+              <div class="input-actions">
+                <div class="analysis-switch-wrapper">
+                  <el-radio-group v-model="enableDataAnalysis" size="small">
+                    <el-radio-button :label="false">普通对话</el-radio-button>
+                    <el-radio-button :label="true">数据分析</el-radio-button>
+                  </el-radio-group>
+                </div>
+                <el-dropdown @command="usePreset" trigger="click" placement="top-start">
+                  <el-button plain size="small" class="quick-question-btn">
+                    快捷提问<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item
+                        v-for="item in presets"
+                        :key="item"
+                        :command="item"
+                      >
+                        {{ item }}
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+                <el-button type="primary" :loading="loading" @click="sendMessage" class="send-btn">
+                  发送
+                </el-button>
+              </div>
             </div>
           </div>
-        </el-card>
-        <el-card class="input-card">
-          <el-alert
-            v-if="error"
-            type="error"
-            :closable="false"
-            show-icon
-            class="error-tip"
-          >
-            {{ error }}
-          </el-alert>
-          <el-input
-            v-model="message"
-            type="textarea"
-            :autosize="{ minRows: 5, maxRows: 10 }"
-            placeholder="请输入要发送给灵犀助手的内容"
-            @keydown.enter="handleEnter"
-          />
-          <div class="actions">
-            <span class="hint">Ctrl + Enter 快速发送</span>
-            <el-button type="primary" :loading="loading" @click="sendMessage">发送</el-button>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="7">
-        <el-card class="tips-card">
-          <template #header>
-            <div class="title">使用提示</div>
-          </template>
-          <ul>
-            <li>前端通过 axios 请求后端 `/api/ai/chat` 接口。</li>
-            <li>接口需要登录态，确保已获取 token。</li>
-            <li>支持多轮对话，暂存在本页内存中。</li>
-          </ul>
-        </el-card>
-        <el-card class="preset-card">
-          <template #header>
-            <div class="title">快捷问题</div>
-          </template>
-          <el-tag
-            v-for="item in presets"
-            :key="item"
-            @click="usePreset(item)"
-            class="preset-tag"
-          >
-            {{ item }}
-          </el-tag>
-        </el-card>
+        </div>
       </el-col>
     </el-row>
   </div>
@@ -85,13 +80,16 @@
 import { ref, nextTick } from 'vue';
 import dayjs from 'dayjs';
 import { ElMessage } from 'element-plus';
-import { chatWithQwen } from '@/api/ai';
+import { ArrowDown } from '@element-plus/icons-vue';
+import { chatWithQwen, analyzeDashboard } from '@/api/ai';
 
 const message = ref('');
 const history = ref([]);
 const loading = ref(false);
 const error = ref('');
 const historyWrap = ref(null);
+const enableDataAnalysis = ref(false);
+const dateRange = ref(null);
 const presets = [
   '今天哪些设备需要维修？',
   '写一段关于无人零售的宣传文案',
@@ -130,10 +128,20 @@ const sendMessage = async () => {
     error.value = '';
     loading.value = true;
     appendMessage('user', content);
+    // 点击发送后立即清空输入框
+    message.value = '';
     try {
-      const reply = await chatWithQwen(content);
+      let reply;
+      if (enableDataAnalysis.value) {
+        // 使用数据分析接口
+        const start = dateRange.value ? dateRange.value[0] : null;
+        const end = dateRange.value ? dateRange.value[1] : null;
+        reply = await analyzeDashboard(content, start, end);
+      } else {
+        // 使用普通对话接口
+        reply = await chatWithQwen(content);
+      }
       appendMessage('assistant', reply);
-      message.value = '';
     } catch (err) {
       error.value = err?.msg || err?.message || '发送失败，请稍后重试';
       history.value.pop();
@@ -143,7 +151,7 @@ const sendMessage = async () => {
 };
 
 const handleEnter = (event) => {
-  if (event.ctrlKey && event.key === 'Enter') {
+  if (event.key === 'Enter') {
     event.preventDefault();
     sendMessage();
   }
@@ -152,7 +160,7 @@ const handleEnter = (event) => {
 const usePreset = (text) => {
   message.value = text;
   nextTick(() => {
-    const textarea = document.querySelector('.input-card textarea');
+    const textarea = document.querySelector('.input-area textarea');
     textarea && textarea.focus();
   });
 };
@@ -164,87 +172,177 @@ const clearHistory = () => {
 
 <style scoped lang="scss">
 .ai-chat-page {
-  .dialog-card,
-  .input-card,
-  .tips-card,
-  .preset-card {
+  .dialog-card-wrapper {
     margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
   }
+  
+  .dialog-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    width: 80%;
+    
+    :deep(.el-card__header) {
+      border-bottom: none;
+      background: transparent;
+    }
+    
+    :deep(.el-card__body) {
+      background: transparent;
+    }
+  }
+  
   .card-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    .title {
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .desc {
-      font-size: 12px;
-      color: #999;
-    }
+    padding: 8px 12px;
   }
+  
   .messages {
     height: 480px;
     overflow-y: auto;
     padding-right: 12px;
+    background: transparent;
   }
+  
   .empty-state {
-    color: #999;
+    color: #333;
     text-align: center;
-    padding-top: 80px;
+    padding-top: 120px;
+    background: transparent;
   }
+  
+  .welcome-title {
+    font-size: 40px;
+    font-weight: 500;
+    color: #333;
+    margin: 0;
+  }
+  
   .message {
     margin-bottom: 16px;
     padding: 16px;
     border-radius: 12px;
-    background: #f8f8f8;
+    max-width: 60%;
+    word-wrap: break-word;
+    word-break: break-word;
+    
     &.assistant {
       background: #f0f9eb;
+      align-self: flex-start;
+      margin-right: 40%;
     }
+    
     &.user {
       background: #ecf5ff;
+      align-self: flex-end;
+      margin-left: 50%;
+      max-width: 50%;
     }
+    
     .meta {
       display: flex;
       justify-content: space-between;
       margin-bottom: 8px;
       font-size: 12px;
       color: #666;
+      
       .role {
         font-weight: 600;
       }
     }
+    
     .content {
       white-space: pre-wrap;
       line-height: 1.6;
       color: #333;
+      word-wrap: break-word;
+      word-break: break-word;
     }
   }
-  .input-card {
-    .error-tip {
-      margin-bottom: 10px;
-    }
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      .hint {
-        color: #909399;
+  
+  .messages {
+    display: flex;
+    flex-direction: column;
+    height: 480px;
+    overflow-y: auto;
+    padding-right: 12px;
+  }
+  
+  .input-wrapper {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .input-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+    padding: 12px;
+    width: 80%;
+  }
+  
+  .input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    padding: 8px;
+    transition: all 0.3s ease;
+    
+    :deep(.el-textarea) {
+      flex: 1;
+      margin-bottom: 0;
+      
+      :deep(.el-textarea__inner) {
+        border: none;
+        resize: none;
+        background: transparent;
+        font-size: 14px;
+        line-height: 1.5;
+        border-radius: 6px;
+        padding: 8px 10px;
+        min-height: 60px;
+        max-height: 120px;
+        overflow-y: auto;
+        
+        &:focus {
+          box-shadow: none;
+        }
+      }
+      
+      :deep(.el-textarea__resize) {
+        display: none;
       }
     }
   }
-  .tips-card ul {
-    padding-left: 18px;
-    li {
-      margin-bottom: 8px;
-    }
+  
+  .input-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
   }
-  .preset-card {
-    .preset-tag {
-      margin: 0 8px 8px 0;
-      cursor: pointer;
-    }
+  
+  .analysis-switch-wrapper {
+    margin-right: auto;
+  }
+  
+  .quick-question-btn {
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  
+  .send-btn {
+    border-radius: 6px;
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }
 </style>

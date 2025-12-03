@@ -66,7 +66,20 @@ export const constantRoutes = [
         path: '/index',
         component: () => import('@/views/home/index'),
         name: 'Index',
-        meta: { title: '首页', icon: 'dashboard', affix: true }
+        meta: { title: '数据监控', icon: 'dashboard', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/ai',
+    component: Layout,
+    redirect: '/ai/chat',
+    children: [
+      {
+        path: 'chat',
+        component: () => import('@/views/ai/qwen-chat'),
+        name: 'AiChat',
+        meta: { title: '灵犀智能助手', icon: 'message' }
       }
     ]
   },
