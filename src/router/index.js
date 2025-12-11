@@ -71,19 +71,6 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/ai',
-    component: Layout,
-    redirect: '/ai/chat',
-    children: [
-      {
-        path: 'chat',
-        component: () => import('@/views/ai/qwen-chat'),
-        name: 'AiChat',
-        meta: { title: '灵犀智能助手', icon: 'message' }
-      }
-    ]
-  },
-  {
     path: '/user',
     component: Layout,
     hidden: true,
