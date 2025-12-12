@@ -22,7 +22,7 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['manage:task:add']">新增</el-button>
+        <el-button type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -53,8 +53,7 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" @click="openTaskDetailDialog(scope.row)"
-            v-hasPermi="['manage:task:edit']">查看详情</el-button>
+          <el-button link type="primary" @click="openTaskDetailDialog(scope.row)">查看详情</el-button>
         </template>
       </el-table-column>
     </el-table>

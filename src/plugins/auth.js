@@ -1,11 +1,26 @@
 import useUserStore from '@/store/modules/user'
 
+// 简单的模式匹配，支持*通配符
+function simpleMatch(pattern, str) {
+  if (pattern === '*') {
+    return true;
+  }
+  if (pattern === str) {
+    return true;
+  }
+  if (pattern.indexOf('*') === -1) {
+    return false;
+  }
+  const regExp = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+  return regExp.test(str);
+}
+
 function authPermission(permission) {
   const all_permission = "*:*:*";
   const permissions = useUserStore().permissions
   if (permission && permission.length > 0) {
     return permissions.some(v => {
-      return all_permission === v || v === permission
+      return all_permission === v || v === permission || simpleMatch(permission, v)
     })
   } else {
     return false

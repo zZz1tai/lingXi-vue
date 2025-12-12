@@ -1,4 +1,4 @@
-﻿import axios from 'axios'
+import axios from 'axios'
 import { ElLoading, ElMessage } from 'element-plus'
 import { saveAs } from 'file-saver'
 import { getToken } from '@/utils/auth'
@@ -72,8 +72,11 @@ export default {
   async printErrMsg(data) {
     const resText = await data.text();
     const rspObj = JSON.parse(resText);
-    const errMsg = errorCode[rspObj.code] || rspObj.msg || errorCode['default']
-    ElMessage.error(errMsg);
+    // 跳过403错误的提示
+    if (rspObj.code !== 403) {
+      const errMsg = errorCode[rspObj.code] || rspObj.msg || errorCode['default']
+      ElMessage.error(errMsg);
+    }
   }
 }
 

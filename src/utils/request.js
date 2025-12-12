@@ -82,8 +82,11 @@ service.interceptors.request.use(config => {
 service.interceptors.response.use(res => {
     // 未设置状态码则默认成功状态
     const code = res.data.code || 200;
-    // 获取错误信息
-    const msg = errorCode[code] || res.data.msg || errorCode['default']
+    // 获取错误信息，忽略403错误提示
+    let msg = errorCode[code] || res.data.msg || errorCode['default'];
+    if (code === 403) {
+      msg = '';
+    }
     // 二进制数据则直接返回
     if (res.request.responseType ===  'blob' || res.request.responseType ===  'arraybuffer') {
       return res.data
@@ -108,13 +111,16 @@ service.interceptors.response.use(res => {
       ElMessage({ message: msg, type: 'warning' })
       return Promise.reject(new Error(msg))
     } else if (code !== 200) {
-      // 错误提示去重处理
-      const now = Date.now();
-      const isDuplicateError = lastError.message === msg && (now - lastError.timestamp) < ERROR_DEBOUNCE_TIME;
-      
-      if (!isDuplicateError) {
-        ElNotification.error({ title: msg })
-        lastError = { message: msg, timestamp: now };
+      // 跳过403错误的提示
+      if (code !== 403) {
+        // 错误提示去重处理
+        const now = Date.now();
+        const isDuplicateError = lastError.message === msg && (now - lastError.timestamp) < ERROR_DEBOUNCE_TIME;
+        
+        if (!isDuplicateError) {
+          ElNotification.error({ title: msg })
+          lastError = { message: msg, timestamp: now };
+        }
       }
       return Promise.reject('error')
     } else {
@@ -124,6 +130,10 @@ service.interceptors.response.use(res => {
   error => {
     console.log('err' + error)
     let { message } = error;
+    // 跳过403错误
+    if (message.includes("403")) {
+      return Promise.reject(error);
+    }
     if (message == "Network Error") {
       message = "后端接口连接异常";
     } else if (message.includes("timeout")) {
