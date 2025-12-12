@@ -231,8 +231,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _ids = row.id || ids.value;
-  proxy.$modal.confirm('是否确认删除区域管理编号为"' + _ids + '"的数据项？').then(function () {
+    const _ids = row.id || ids.value;
+    const _names = row ? row.regionName : '选中的';
+  proxy.$modal.confirm('是否确认删除区域"' + _names + '"？').then(function () {
     return delRegion(_ids);
   }).then(() => {
     getList();

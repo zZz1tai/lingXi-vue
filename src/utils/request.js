@@ -11,6 +11,13 @@ let downloadLoadingInstance;
 // 是否显示重新登录
 export let isRelogin = { show: false };
 
+// 错误提示去重，避免短时间内重复显示相同错误
+let lastError = {
+  message: '',
+  timestamp: 0
+};
+const ERROR_DEBOUNCE_TIME = 3000; // 错误提示防抖时间（毫秒）
+
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 // 创建axios实例
 const service = axios.create({
@@ -101,7 +108,14 @@ service.interceptors.response.use(res => {
       ElMessage({ message: msg, type: 'warning' })
       return Promise.reject(new Error(msg))
     } else if (code !== 200) {
-      ElNotification.error({ title: msg })
+      // 错误提示去重处理
+      const now = Date.now();
+      const isDuplicateError = lastError.message === msg && (now - lastError.timestamp) < ERROR_DEBOUNCE_TIME;
+      
+      if (!isDuplicateError) {
+        ElNotification.error({ title: msg })
+        lastError = { message: msg, timestamp: now };
+      }
       return Promise.reject('error')
     } else {
       return  Promise.resolve(res.data)
@@ -117,7 +131,14 @@ service.interceptors.response.use(res => {
     } else if (message.includes("Request failed with status code")) {
       message = "系统接口" + message.substr(message.length - 3) + "异常";
     }
-    ElMessage({ message: message, type: 'error', duration: 5 * 1000 })
+    // 错误提示去重处理
+    const now = Date.now();
+    const isDuplicateError = lastError.message === message && (now - lastError.timestamp) < ERROR_DEBOUNCE_TIME;
+    
+    if (!isDuplicateError) {
+      ElMessage({ message: message, type: 'error', duration: 5 * 1000 })
+      lastError = { message: message, timestamp: now };
+    }
     return Promise.reject(error)
   }
 )
@@ -132,15 +153,22 @@ export function download(url, params, filename, config) {
     ...config
   }).then(async (data) => {
     const isBlob = blobValidate(data);
-    if (isBlob) {
-      const blob = new Blob([data])
-      saveAs(blob, filename)
-    } else {
-      const resText = await data.text();
-      const rspObj = JSON.parse(resText);
-      const errMsg = errorCode[rspObj.code] || rspObj.msg || errorCode['default']
-      ElMessage.error(errMsg);
-    }
+      if (isBlob) {
+        const blob = new Blob([data])
+        saveAs(blob, filename)
+      } else {
+        const resText = await data.text();
+        const rspObj = JSON.parse(resText);
+        const errMsg = errorCode[rspObj.code] || rspObj.msg || errorCode['default']
+        // 错误提示去重处理
+        const now = Date.now();
+        const isDuplicateError = lastError.message === errMsg && (now - lastError.timestamp) < ERROR_DEBOUNCE_TIME;
+        
+        if (!isDuplicateError) {
+          ElMessage.error(errMsg);
+          lastError = { message: errMsg, timestamp: now };
+        }
+      }
     downloadLoadingInstance.close();
   }).catch((r) => {
     console.error(r)

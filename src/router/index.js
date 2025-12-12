@@ -83,6 +83,38 @@ export const constantRoutes = [
         meta: { title: '个人中心', icon: 'user' }
       }
     ]
+  },
+  // App模块路由
+  {
+    path: '/app',
+    component: Layout,
+    redirect: 'noRedirect',
+    name: 'App',
+    hidden: true,
+    meta: { title: 'App功能', icon: 'app' },
+    children: [
+      {
+        path: 'emp/profile',
+        component: () => import('@/views/app/emp/profile'),
+        name: 'AppEmpProfile',
+        hidden: true,
+        meta: { title: '员工信息', icon: 'user' }
+      },
+      {
+        path: 'task',
+        component: () => import('@/views/app/task/index'),
+        name: 'AppTask',
+        hidden: true,
+        meta: { title: '工单列表', icon: 'ticket' }
+      },
+      {
+        path: 'task/detail/:id(\\d+)',
+        component: () => import('@/views/app/task/detail'),
+        name: 'AppTaskDetail',
+        hidden: true,
+        meta: { title: '工单详情', icon: 'document', activeMenu: '/app/task' }
+      }
+    ]
   }
 ]
 
@@ -95,7 +127,7 @@ export const dynamicRoutes = [
     permissions: ['system:user:edit'],
     children: [
       {
-        path: 'role/:userId(\\d+)',
+        path: 'role/:userId(\d+)',
         component: () => import('@/views/system/user/authRole'),
         name: 'AuthRole',
         meta: { title: '分配角色', activeMenu: '/system/user' }

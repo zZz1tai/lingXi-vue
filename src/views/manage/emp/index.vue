@@ -74,6 +74,9 @@
         <el-form-item label="联系电话" prop="mobile">
           <el-input v-model="form.mobile" placeholder="请输入联系电话" />
         </el-form-item>
+        <el-form-item label="登录密码" prop="password" v-if="!form.id">
+          <el-input v-model="form.password" type="password" placeholder="请输入登录密码" />
+        </el-form-item>
         <el-form-item label="创建时间" prop="account" v-if="form.id">
           {{ form.createTime }}
         </el-form-item>
@@ -133,22 +136,37 @@ const data = reactive({
     status: null,
   },
   rules: {
-    userName: [
-      { required: true, message: "员工名称不能为空", trigger: "blur" }
-    ],
-    regionId: [
-      { required: true, message: "所属区域Id不能为空", trigger: "blur" }
-    ],
-    roleId: [
-      { required: true, message: "角色id不能为空", trigger: "blur" }
-    ],
-    mobile: [
-      { required: true, message: "联系电话不能为空", trigger: "blur" }
-    ],
-    image: [
-      { required: true, message: "员工头像不能为空", trigger: "blur" }
-    ],
-  }
+      userName: [
+        { required: true, message: "员工名称不能为空", trigger: "blur" }
+      ],
+      regionId: [
+        { required: true, message: "所属区域Id不能为空", trigger: "blur" }
+      ],
+      roleId: [
+        { required: true, message: "角色id不能为空", trigger: "blur" }
+      ],
+      mobile: [
+        { required: true, message: "联系电话不能为空", trigger: "blur" }
+      ],
+      password: [
+        { required: true, message: "登录密码不能为空", trigger: "blur", validator: (rule, value, callback) => {
+            if (form.value.id) {
+              // 编辑时密码可选
+              callback();
+            } else {
+              // 新增时密码必填
+              if (!value) {
+                callback(new Error("登录密码不能为空"));
+              } else {
+                callback();
+              }
+            }
+          } }
+      ],
+      image: [
+        { required: true, message: "员工头像不能为空", trigger: "blur" }
+      ],
+    }
 });
 
 const { queryParams, form, rules } = toRefs(data);
@@ -180,6 +198,7 @@ function reset() {
     roleCode: null,
     roleName: null,
     mobile: null,
+    password: null,
     image: null,
     status: null,
     createTime: null,
@@ -249,7 +268,8 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value;
-  proxy.$modal.confirm('是否确认删除人员列表编号为"' + _ids + '"的数据项？').then(function () {
+  const _names = row ? row.userName : '选中的';
+  proxy.$modal.confirm('是否确认删除员工"' + _names + '"？').then(function () {
     return delEmp(_ids);
   }).then(() => {
     getList();

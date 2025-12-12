@@ -62,7 +62,7 @@
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="taskRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="设备编号" prop="innerCode">
-          <el-input v-model="form.innerCode" placeholder="请输入设备编号" @blur="handleCode" />
+          <el-input v-model="form.innerCode" placeholder="请输入设备编号" @blur="handleCode" @input="handleCode" />
         </el-form-item>
         <el-form-item label="工单类型" prop="productTypeId">
           <el-select v-model="form.productTypeId" placeholder="请选择工单类型" clearable>
@@ -307,10 +307,16 @@ function getTaskTypeList() {
   });
 }
 // 填写设备编号后
+let debounceTimer = null;
 const handleCode = () => {
-  if (form.value.innerCode) {
-    getUserList();
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
   }
+  debounceTimer = setTimeout(() => {
+    if (form.value.innerCode) {
+      getUserList();
+    }
+  }, 500);
 };
 // 获取运营人员列表
 const getUserList = () => {
@@ -355,9 +361,8 @@ const handleClose = () => {
 const channelDetails = () => {
   proxy.$refs['taskRef'].validateField('innerCode', (error) => {
     if (!error) {
-      return;
+      channelVisible.value = true;
     }
-    channelVisible.value = true;
   });
 };
 // 关闭补货清单

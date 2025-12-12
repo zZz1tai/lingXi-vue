@@ -182,7 +182,8 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _classIds = row.classId || ids.value;
-  proxy.$modal.confirm('是否确认删除商品类型编号为"' + _classIds + '"的数据项？').then(function () {
+  const _names = row ? row.className : '选中的';
+  proxy.$modal.confirm('是否确认删除商品类型"' + _names + '"？').then(function () {
     return delSkuClass(_classIds);
   }).then(() => {
     getList();

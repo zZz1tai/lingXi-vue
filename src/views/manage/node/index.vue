@@ -277,7 +277,8 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value;
-  proxy.$modal.confirm('是否确认删除点位管理编号为"' + _ids + '"的数据项？').then(function () {
+  const _names = row ? row.nodeName : '选中的';
+  proxy.$modal.confirm('是否确认删除点位"' + _names + '"？').then(function () {
     return delNode(_ids);
   }).then(() => {
     getList();

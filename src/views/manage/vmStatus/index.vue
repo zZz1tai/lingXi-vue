@@ -55,35 +55,43 @@
 
     <!-- 查看设备详情对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form :model="form" label-width="80px">
-        <el-form-item label="销售量">
-          {{ form.salesVolume }}
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="设备编号">
+          {{ form.innerCode }}
         </el-form-item>
-        <el-form-item label="销售额">
-          {{ form.salesAmount }}
+        <el-form-item label="设备类型">
+          <div v-for="item in vmTypeList" :key="item.id">
+            <span v-if="item.id === form.vmTypeId">{{ item.name }}</span>
+          </div>
         </el-form-item>
-        <el-form-item label="补货次数">
-          {{ form.replenishmentTimes }}
+        <el-form-item label="详细地址">
+          {{ form.addr }}
+        </el-form-item>
+        <el-form-item label="合作商">
+          <div v-for="item in partnerList" :key="item.id">
+            <span v-if="item.id === form.partnerId">{{ item.partnerName }}</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="运营状态">
+          <dict-tag :options="vm_status" :value="form.vmStatus" />
+        </el-form-item>
+        <el-form-item label="设备状态">
+          <span v-if="form.runningStatus != null">
+            {{ JSON.parse(form.runningStatus).status == true ? '正常' : '异常' }}
+          </span>
+          <span v-else>异常</span>
         </el-form-item>
         <el-form-item label="维修次数">
-          {{ form.maintenanceTimes }}
+          {{ form.maintenanceCount || 0 }}
         </el-form-item>
-        <el-form-item label="商品销量（月）">
-          <el-table :data="form.monthlySales" border style="width: 100%">
-            <for each="item" in="form.monthlySales">
-              <el-table-column prop="month" label="月份" />
-              <el-table-column prop="coke" label="可乐" />
-              <el-table-column prop="icedTea" label="冰红茶" />
-              <el-table-column prop="mineralWater" label="矿泉水" />
-            </for>
-          </el-table>
+        <el-form-item label="最后补货时间">
+          {{ parseTime(form.lastSupplyTime, "{y}-{m}-{d} {h}:{i}:{s}") }}
         </el-form-item>
       </el-form>
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="cancel">取消</el-button>
-          <el-button type="primary" @click="submitForm">确定</el-button>
+          <el-button type="primary" @click="cancel">关闭</el-button>
         </span>
       </template>
     </el-dialog>
@@ -97,7 +105,9 @@ import { listPartner } from "@/api/manage/partner";
 import { loadAllParams } from "@/api/page";
 import { listNode } from "@/api/manage/node";
 import { listRegion } from "@/api/manage/region";
-import { ref } from "vue";
+import { getMaintenanceCount } from "@/api/manage/task";
+import { ref, reactive, toRefs } from "vue";
+import { parseTime } from "@/utils/ruoyi";
 
 const { proxy } = getCurrentInstance();
 const { vm_status } = proxy.useDict('vm_status');
@@ -175,7 +185,8 @@ function reset() {
     clientId: null,
     policyId: null,
     createTime: null,
-    updateTime: null
+    updateTime: null,
+    maintenanceCount: 0
   };
   proxy.resetForm("vmRef");
 }
@@ -206,35 +217,31 @@ function handleAdd() {
   title.value = "添加设备管理";
 }
 
-/** 修改按钮操作 */
+/** 查看详情按钮操作 */
 function handleUpdate(row) {
   reset();
-  const _id = row.id || ids.value
+  // 确保使用row.id，而不是ids.value，因为ids.value是为批量操作准备的
+  const _id = row.id;
+  if (!_id) {
+    console.error('设备ID为空，无法查看详情');
+    return;
+  }
   getVm(_id).then(response => {
     form.value = response.data;
+    // 获取设备维修次数
+    if (form.value.innerCode) {
+      getMaintenanceCount(form.value.innerCode).then(res => {
+        form.value.maintenanceCount = res.data;
+      }).catch(error => {
+        console.error('获取维修次数失败:', error);
+        // 即使获取维修次数失败，也要打开对话框
+        form.value.maintenanceCount = 0;
+      });
+    }
     open.value = true;
     title.value = "查看设备详情";
-  });
-}
-
-/** 提交按钮 */
-function submitForm() {
-  proxy.$refs["vmRef"].validate(valid => {
-    if (valid) {
-      if (form.value.id != null) {
-        updateVm(form.value).then(response => {
-          proxy.$modal.msgSuccess("修改成功");
-          open.value = false;
-          getList();
-        });
-      } else {
-        addVm(form.value).then(response => {
-          proxy.$modal.msgSuccess("新增成功");
-          open.value = false;
-          getList();
-        });
-      }
-    }
+  }).catch(error => {
+    console.error('获取设备详情失败:', error);
   });
 }
 

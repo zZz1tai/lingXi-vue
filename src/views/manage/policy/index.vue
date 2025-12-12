@@ -219,7 +219,8 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _policyIds = row.policyId || ids.value;
-  proxy.$modal.confirm('是否确认删除策略管理编号为"' + _policyIds + '"的数据项？').then(function () {
+  const _names = row ? row.policyName : '选中的';
+  proxy.$modal.confirm('是否确认删除策略"' + _names + '"？').then(function () {
     return delPolicy(_policyIds);
   }).then(() => {
     getList();

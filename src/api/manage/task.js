@@ -80,3 +80,11 @@ export function setJob(data) {
     data:data
   })
 }
+
+// 查询设备维修次数
+export function getMaintenanceCount(innerCode) {
+  return request({
+    url: '/manage/task/maintenance-count/' + innerCode,
+    method: 'get'
+  })
+}

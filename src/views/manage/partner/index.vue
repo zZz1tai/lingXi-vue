@@ -262,7 +262,8 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value;
-  proxy.$modal.confirm('是否确认删除合作商管理编号为"' + _ids + '"的数据项？').then(function () {
+  const _names = row ? row.partnerName : '选中的';
+  proxy.$modal.confirm('是否确认删除合作商"' + _names + '"？').then(function () {
     return delPartner(_ids);
   }).then(() => {
     getList();
@@ -272,7 +273,8 @@ function handleDelete(row) {
 //重置合作商密码
 function resetPwd(row) {
   const _ids = row.id || ids.value;
-  proxy.$modal.confirm('是否确认重置合作商编号为"' + _ids + '"的密码？').then(function () {
+  const _names = row ? row.partnerName : '选中的';
+  proxy.$modal.confirm('是否确认重置合作商"' + _names + '"的密码？').then(function () {
     return resetPartnerPwd(_ids);
   }).then(() => {
     getList();

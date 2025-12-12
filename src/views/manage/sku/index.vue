@@ -4,6 +4,11 @@
       <el-form-item label="商品名称" prop="skuName">
         <el-input v-model="queryParams.skuName" placeholder="请输入商品名称" clearable @keyup.enter="handleQuery" />
       </el-form-item>
+      <el-form-item label="商品类型" prop="classId">
+        <el-select v-model="queryParams.classId" placeholder="请选择商品类型" clearable>
+          <el-option v-for="item in skuClassList" :key="item.classId" :label="item.className" :value="item.classId"></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
