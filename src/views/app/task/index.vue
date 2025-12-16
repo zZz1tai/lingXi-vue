@@ -1,134 +1,297 @@
 <template>
   <div class="app-task-index">
-    <el-card shadow="hover" class="task-card">
-      <template #header>
-        <div class="card-header">
-          <el-icon><Ticket /></el-icon>
-          <span>工单处理</span>
-        </div>
-      </template>
-      
-      <!-- 搜索栏 -->
-      <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="设备编号">
-          <el-input v-model="searchForm.innerCode" placeholder="请输入设备编号" clearable />
-        </el-form-item>
-        <el-form-item label="工单编号">
-          <el-input v-model="searchForm.taskCode" placeholder="请输入工单编号" clearable />
-        </el-form-item>
-        <el-form-item label="工单状态">
-          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="待处理" value="0" />
-            <el-option label="处理中" value="1" />
-            <el-option label="已完成" value="2" />
-            <el-option label="已取消" value="3" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="是否维修">
-          <el-select v-model="searchForm.isRepair" placeholder="请选择" clearable>
-            <el-option label="是" value="true" />
-            <el-option label="否" value="false" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">
-            <el-icon><Search /></el-icon>
-            搜索
-          </el-button>
-          <el-button @click="resetForm">
-            <el-icon><Refresh /></el-icon>
-            重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-      
-      <!-- 排名卡片 -->
-      <el-card class="rank-card" shadow="hover">
-        <template #header>
-          <div class="card-header-small">
-            <el-icon><TrendCharts /></el-icon>
-            <span>我的排名</span>
+    <!-- 顶部标题和排名 -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1 class="page-title">
+          <el-icon class="title-icon"><Ticket /></el-icon>
+          工单处理中心
+        </h1>
+        <p class="page-subtitle">高效处理您的工单任务</p>
+      </div>
+      <el-card class="rank-widget" shadow="hover">
+        <div class="rank-widget-content">
+          <el-icon class="rank-icon"><Trophy /></el-icon>
+          <div class="rank-info">
+            <div class="rank-label">我的排名</div>
+            <div class="rank-value" v-if="rankInfo">
+              <span class="rank-number">{{ rankInfo.rank }}</span>
+              <span class="rank-divider">/</span>
+              <span class="rank-total">{{ rankInfo.total }}</span>
+            </div>
+            <div v-else class="rank-loading">
+              <el-skeleton-item variant="text" style="width: 60px" />
+            </div>
           </div>
-        </template>
-        <div class="rank-content" v-if="rankInfo">
-          <div class="rank-number">{{ rankInfo.rank }}</div>
-          <div class="rank-total">
-            <span>共</span>
-            <span class="total-number">{{ rankInfo.total }}</span>
-            <span>人</span>
-          </div>
-        </div>
-        <div v-else class="rank-loading">
-          <el-skeleton :rows="1" animated />
         </div>
       </el-card>
-      
+    </div>
+
+    <!-- 主内容区域 -->
+    <el-card shadow="never" class="main-card">
+      <!-- 搜索和筛选区域 -->
+      <div class="filter-section">
+        <div class="filter-header">
+          <el-icon><Filter /></el-icon>
+          <span>筛选条件</span>
+        </div>
+        <el-form :inline="true" :model="searchForm" class="search-form">
+          <div class="form-row">
+            <el-form-item label="设备编号" class="form-item">
+              <el-input
+                v-model="searchForm.innerCode"
+                placeholder="请输入设备编号"
+                clearable
+                class="input-with-icon"
+              >
+                <template #prefix>
+                  <el-icon><Monitor /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item label="工单编号" class="form-item">
+              <el-input
+                v-model="searchForm.taskCode"
+                placeholder="请输入工单编号"
+                clearable
+                class="input-with-icon"
+              >
+                <template #prefix>
+                  <el-icon><Document /></el-icon>
+                </template>
+              </el-input>
+            </el-form-item>
+            
+            <el-form-item label="工单状态" class="form-item">
+              <el-select
+                v-model="searchForm.status"
+                placeholder="请选择状态"
+                clearable
+                class="status-select"
+              >
+                <el-option label="待处理" value="0">
+                  <span class="status-option">
+                    <span class="status-dot dot-warning"></span>
+                    待处理
+                  </span>
+                </el-option>
+                <el-option label="处理中" value="1">
+                  <span class="status-option">
+                    <span class="status-dot dot-primary"></span>
+                    处理中
+                  </span>
+                </el-option>
+                <el-option label="已完成" value="2">
+                  <span class="status-option">
+                    <span class="status-dot dot-success"></span>
+                    已完成
+                  </span>
+                </el-option>
+                <el-option label="已取消" value="3">
+                  <span class="status-option">
+                    <span class="status-dot dot-danger"></span>
+                    已取消
+                  </span>
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </div>
+          
+          <div class="form-row">
+            <el-form-item label="是否维修" class="form-item">
+              <el-select
+                v-model="searchForm.isRepair"
+                placeholder="请选择"
+                clearable
+              >
+                <el-option label="是" value="true" />
+                <el-option label="否" value="false" />
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="创建时间" class="form-item date-range">
+              <el-date-picker
+                v-model="searchForm.timeRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                @change="handleDateChange"
+                clearable
+              />
+            </el-form-item>
+            
+            <div class="form-actions">
+              <el-button
+                type="primary"
+                @click="handleSearch"
+                class="search-btn"
+              >
+                <el-icon><Search /></el-icon>
+                搜索
+              </el-button>
+              <el-button
+                @click="resetForm"
+                class="reset-btn"
+              >
+                <el-icon><Refresh /></el-icon>
+                重置
+              </el-button>
+            </div>
+          </div>
+        </el-form>
+      </div>
+
       <!-- 工单列表 -->
-      <el-table v-loading="loading" :data="taskList" style="width: 100%" border>
-        <el-table-column prop="taskCode" label="工单编号" min-width="180" />
-        <el-table-column prop="innerCode" label="设备编号" min-width="150" />
-        <el-table-column prop="taskTypeName" label="工单类型" min-width="120" />
-        <el-table-column label="状态" min-width="100">
-          <template #default="scope">
-            <el-tag
-              :type="getStatusType(scope.row.status)"
-              size="small"
-            >
-              {{ getStatusText(scope.row.status) }}
+      <div class="table-section">
+        <div class="table-header">
+          <div class="table-title">
+            <el-icon><List /></el-icon>
+            <span>工单列表</span>
+            <el-tag v-if="pagination.total" type="info" size="small">
+              共 {{ pagination.total }} 条记录
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" min-width="180" />
-        <el-table-column prop="acceptTime" label="接受时间" min-width="180" />
-        <el-table-column prop="completeTime" label="完成时间" min-width="180" />
-        <el-table-column label="操作" min-width="200" fixed="right">
-          <template #default="scope">
+          </div>
+          <div class="table-actions">
             <el-button
-              v-if="scope.row.status === 0"
-              type="primary"
-              size="small"
-              @click="handleAccept(scope.row.id)"
+              type="text"
+              @click="refreshData"
+              :loading="loading"
             >
-              接受
+              <el-icon><RefreshRight /></el-icon>
+              刷新
             </el-button>
-            <el-button
-              v-if="scope.row.status === 1"
-              type="success"
-              size="small"
-              @click="handleComplete(scope.row.id)"
-            >
-              完成
-            </el-button>
-            <el-button
-              v-if="scope.row.status === 0 || scope.row.status === 1"
-              type="danger"
-              size="small"
-              @click="handleCancel(scope.row.id)"
-            >
-              取消
-            </el-button>
-            <el-button
-              type="info"
-              size="small"
-              @click="handleDetail(scope.row.id)"
-            >
-              详情
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      
-      <!-- 分页 -->
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="pagination.pageIndex"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="pagination.total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+          </div>
+        </div>
+        
+        <el-table
+          v-loading="loading"
+          :data="taskList"
+          style="width: 100%"
+          :header-cell-style="{ background: '#f8f9fa', color: '#606266' }"
+          :row-style="{ cursor: 'pointer' }"
+          @row-click="(row) => handleDetail(row.id)"
+          class="task-table"
+        >
+          <el-table-column prop="taskCode" label="工单编号" min-width="180">
+            <template #default="scope">
+              <div class="task-code">
+                <el-icon><DocumentCopy /></el-icon>
+                {{ scope.row.taskCode }}
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="innerCode" label="设备编号" min-width="150">
+            <template #default="scope">
+              <div class="inner-code">
+                <el-icon><Cpu /></el-icon>
+                {{ scope.row.innerCode }}
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="taskTypeName" label="工单类型" min-width="120" />
+          
+          <el-table-column label="状态" min-width="120">
+            <template #default="scope">
+              <el-tag
+                :type="getStatusType(scope.row.status)"
+                size="small"
+                :class="`status-tag status-${scope.row.status}`"
+              >
+                <el-icon v-if="scope.row.status === 0"><Clock /></el-icon>
+                <el-icon v-if="scope.row.status === 1"><Loading /></el-icon>
+                <el-icon v-if="scope.row.status === 2"><CircleCheck /></el-icon>
+                <el-icon v-if="scope.row.status === 3"><CircleClose /></el-icon>
+                {{ getStatusText(scope.row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="时间信息" min-width="280">
+            <template #default="scope">
+              <div class="time-info">
+                <div class="time-item">
+                  <span class="time-label">创建：</span>
+                  <span class="time-value">{{ formatTime(scope.row.createTime) }}</span>
+                </div>
+                <div class="time-item" v-if="scope.row.acceptTime">
+                  <span class="time-label">接受：</span>
+                  <span class="time-value">{{ formatTime(scope.row.acceptTime) }}</span>
+                </div>
+                <div class="time-item" v-if="scope.row.completeTime">
+                  <span class="time-label">完成：</span>
+                  <span class="time-value">{{ formatTime(scope.row.completeTime) }}</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="操作" min-width="200" fixed="right">
+            <template #default="scope">
+              <div class="action-buttons" @click.stop>
+                <el-button
+                  v-if="scope.row.status === 0"
+                  type="primary"
+                  size="small"
+                  @click="handleAccept(scope.row.id)"
+                  class="action-btn"
+                >
+                  <el-icon><Check /></el-icon>
+                  接受
+                </el-button>
+                
+                <el-button
+                  v-if="scope.row.status === 1"
+                  type="success"
+                  size="small"
+                  @click="handleComplete(scope.row.id)"
+                  class="action-btn"
+                >
+                  <el-icon><Finished /></el-icon>
+                  完成
+                </el-button>
+                
+                <el-button
+                  v-if="scope.row.status === 0 || scope.row.status === 1"
+                  type="danger"
+                  size="small"
+                  @click="handleCancel(scope.row.id)"
+                  class="action-btn"
+                >
+                  <el-icon><Close /></el-icon>
+                  取消
+                </el-button>
+                
+                <el-button
+                  type="info"
+                  size="small"
+                  @click="handleDetail(scope.row.id)"
+                  class="action-btn"
+                >
+                  <el-icon><View /></el-icon>
+                  详情
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 分页 -->
+        <div class="pagination-container">
+          <el-pagination
+            v-model:current-page="pagination.pageIndex"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            class="custom-pagination"
+          />
+        </div>
       </div>
     </el-card>
     
@@ -136,23 +299,49 @@
     <el-dialog
       v-model="cancelDialogVisible"
       title="取消工单"
-      width="400px"
+      width="500px"
+      class="cancel-dialog"
     >
-      <el-form :model="cancelForm" label-width="80px">
-        <el-form-item label="取消原因" required>
-          <el-input
-            v-model="cancelForm.reason"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入取消原因"
-          />
-        </el-form-item>
-      </el-form>
+      <div class="dialog-content">
+        <el-alert
+          type="warning"
+          :closable="false"
+          class="alert-warning"
+        >
+          <template #title>
+            确定要取消该工单吗？此操作无法撤销。
+          </template>
+        </el-alert>
+        
+        <el-form :model="cancelForm" label-width="80px" class="cancel-form">
+          <el-form-item label="取消原因" required>
+            <el-input
+              v-model="cancelForm.reason"
+              type="textarea"
+              :rows="4"
+              placeholder="请详细说明取消原因，至少输入10个字符"
+              maxlength="500"
+              show-word-limit
+              class="reason-textarea"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+      
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="cancelDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmCancel">确定</el-button>
-        </span>
+        <div class="dialog-footer">
+          <el-button @click="cancelDialogVisible = false" class="cancel-btn">
+            放弃取消
+          </el-button>
+          <el-button
+            type="primary"
+            @click="confirmCancel"
+            :disabled="!cancelForm.reason.trim() || cancelForm.reason.trim().length < 10"
+            class="confirm-btn"
+          >
+            确认取消
+          </el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -162,7 +351,10 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Ticket, Search, Refresh, TrendCharts 
+  Ticket, Search, Refresh, Filter, Monitor, Document,
+  List, DocumentCopy, Cpu, Clock, Loading, CircleCheck,
+  CircleClose, Check, Finished, Close, View, RefreshRight,
+  Trophy
 } from '@element-plus/icons-vue'
 import { 
   searchTasks, getUserRank, acceptTask, cancelTask, completeTask 
@@ -179,6 +371,7 @@ const searchForm = reactive({
   taskCode: '',
   status: '',
   isRepair: '',
+  timeRange: [],
   start: '',
   end: ''
 })
@@ -206,10 +399,10 @@ const cancelForm = reactive({
 
 // 状态映射
 const statusMap = {
-  0: { text: '待处理', type: 'warning' },
-  1: { text: '处理中', type: 'primary' },
-  2: { text: '已完成', type: 'success' },
-  3: { text: '已取消', type: 'danger' }
+  0: { text: '待处理', type: 'warning', icon: 'Clock' },
+  1: { text: '处理中', type: 'primary', icon: 'Loading' },
+  2: { text: '已完成', type: 'success', icon: 'CircleCheck' },
+  3: { text: '已取消', type: 'danger', icon: 'CircleClose' }
 }
 
 // 获取状态文本
@@ -220,6 +413,35 @@ const getStatusText = (status) => {
 // 获取状态类型
 const getStatusType = (status) => {
   return statusMap[status]?.type || 'info'
+}
+
+// 格式化时间
+const formatTime = (time) => {
+  if (!time) return '-'
+  return new Date(time).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace(/\//g, '-')
+}
+
+// 处理日期变化
+const handleDateChange = (dates) => {
+  if (dates && dates.length === 2) {
+    searchForm.start = dates[0].toISOString().split('T')[0]
+    searchForm.end = dates[1].toISOString().split('T')[0]
+  } else {
+    searchForm.start = ''
+    searchForm.end = ''
+  }
+}
+
+// 刷新数据
+const refreshData = () => {
+  fetchTasks()
+  fetchUserRank()
 }
 
 // 搜索工单
@@ -235,6 +457,7 @@ const resetForm = () => {
     taskCode: '',
     status: '',
     isRepair: '',
+    timeRange: [],
     start: '',
     end: ''
   })
@@ -251,6 +474,13 @@ const fetchTasks = async () => {
       pageIndex: pagination.pageIndex,
       pageSize: pagination.pageSize
     }
+    // 移除空的参数
+    Object.keys(params).forEach(key => {
+      if (params[key] === '' || params[key] === null || params[key] === undefined) {
+        delete params[key]
+      }
+    })
+    
     const response = await searchTasks(params)
     taskList.value = response.rows || []
     pagination.total = response.total || 0
@@ -304,6 +534,11 @@ const handleCancel = (taskId) => {
 const confirmCancel = async () => {
   if (!cancelForm.reason.trim()) {
     ElMessage.warning('请输入取消原因')
+    return
+  }
+  
+  if (cancelForm.reason.trim().length < 10) {
+    ElMessage.warning('取消原因至少需要10个字符')
     return
   }
   
@@ -362,72 +597,609 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .app-task-index {
-  padding: 20px;
-  background-color: #f5f7fa;
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
   min-height: 100vh;
 }
 
-.task-card {
-  margin-bottom: 20px;
-}
-
-.card-header {
+// 页面头部
+.page-header {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 600;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  
+  .header-left {
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 600;
+      color: #303133;
+      
+      .title-icon {
+        font-size: 32px;
+        color: #409eff;
+      }
+    }
+    
+    .page-subtitle {
+      margin: 0;
+      font-size: 14px;
+      color: #909399;
+    }
+  }
+  
+  .rank-widget {
+    width: 220px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
+    .rank-widget-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: white;
+      
+      .rank-icon {
+        font-size: 32px;
+      }
+      
+      .rank-info {
+        .rank-label {
+          font-size: 14px;
+          opacity: 0.9;
+          margin-bottom: 4px;
+        }
+        
+        .rank-value {
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+          
+          .rank-number {
+            font-size: 32px;
+            font-weight: 700;
+          }
+          
+          .rank-divider {
+            font-size: 18px;
+            opacity: 0.7;
+          }
+          
+          .rank-total {
+            font-size: 16px;
+            opacity: 0.7;
+          }
+        }
+      }
+    }
+  }
 }
 
-.card-header-small {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
+// 主卡片
+.main-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  background: white;
+  
+  // 筛选区域
+  .filter-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f0f0f0;
+    
+    .filter-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+      
+      .el-icon {
+        color: #409eff;
+      }
+    }
+    
+    .search-form {
+      .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        .form-item {
+          margin: 0;
+          
+          :deep(.el-form-item__label) {
+            font-weight: 500;
+            color: #606266;
+          }
+          
+          &.date-range {
+            flex: 1;
+            min-width: 300px;
+          }
+        }
+        
+        .form-actions {
+          display: flex;
+          align-items: flex-end;
+          gap: 12px;
+          margin-left: auto;
+          
+          .search-btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+          }
+          
+          .reset-btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            color: #606266;
+            border-color: #dcdfe6;
+          }
+        }
+      }
+      
+      .input-with-icon {
+        :deep(.el-input__prefix) {
+          display: flex;
+          align-items: center;
+          padding-left: 8px;
+        }
+      }
+      
+      .status-select {
+        :deep(.status-option) {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          
+          .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            
+            &.dot-warning {
+              background: #e6a23c;
+            }
+            
+            &.dot-primary {
+              background: #409eff;
+            }
+            
+            &.dot-success {
+              background: #67c23a;
+            }
+            
+            &.dot-danger {
+              background: #f56c6c;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // 表格区域
+  .table-section {
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      
+      .table-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #303133;
+        
+        .el-icon {
+          color: #409eff;
+        }
+      }
+      
+      .table-actions {
+        .el-button {
+          color: #409eff;
+          
+          &:hover {
+            background: #f5f7fa;
+          }
+        }
+      }
+    }
+    
+    .task-table {
+      border-radius: 8px;
+      overflow: hidden;
+      
+      :deep(.el-table__header) {
+        th {
+          font-weight: 600;
+        }
+      }
+      
+      :deep(.el-table__row) {
+        &:hover {
+          background-color: #fafafa;
+        }
+        
+        td {
+          padding: 16px 0;
+        }
+      }
+      
+      .task-code, .inner-code {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        .el-icon {
+          color: #909399;
+        }
+      }
+      
+      .status-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+        
+        &.status-0 {
+          background: #fdf6ec;
+          border-color: #f5dab1;
+        }
+        
+        &.status-1 {
+          background: #ecf5ff;
+          border-color: #b3d8ff;
+        }
+        
+        &.status-2 {
+          background: #f0f9eb;
+          border-color: #c2e7b0;
+        }
+        
+        &.status-3 {
+          background: #fef0f0;
+          border-color: #fbc4c4;
+        }
+      }
+      
+      .time-info {
+        .time-item {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 4px;
+          font-size: 13px;
+          
+          &:last-child {
+            margin-bottom: 0;
+          }
+          
+          .time-label {
+            color: #909399;
+            min-width: 40px;
+          }
+          
+          .time-value {
+            color: #606266;
+            flex: 1;
+          }
+        }
+      }
+      
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        
+        .action-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          border-radius: 6px;
+          padding: 6px 12px;
+          font-size: 13px;
+          
+          .el-icon {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+    
+    // 分页
+    .pagination-container {
+      margin-top: 24px;
+      display: flex;
+      justify-content: flex-end;
+      
+      .custom-pagination {
+        :deep(.el-pagination__total),
+        :deep(.el-pagination__jump) {
+          color: #606266;
+        }
+        
+        :deep(.el-pagination__sizes) {
+          margin-right: 16px;
+        }
+      }
+    }
+  }
 }
 
-.search-form {
-  margin-bottom: 20px;
-  padding: 10px;
-  background-color: #fafafa;
-  border-radius: 4px;
+// 取消工单弹窗
+.cancel-dialog {
+  :deep(.el-dialog) {
+    border-radius: 12px;
+    
+    .el-dialog__header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      margin: 0;
+      
+      .el-dialog__title {
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+    
+    .el-dialog__body {
+      padding: 24px;
+    }
+    
+    .el-dialog__footer {
+      padding: 20px 24px;
+      border-top: 1px solid #f0f0f0;
+    }
+  }
+  
+  .dialog-content {
+    .alert-warning {
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
+      background: #fdf6ec;
+    }
+    
+    .cancel-form {
+      :deep(.el-form-item__label) {
+        font-weight: 500;
+        color: #606266;
+      }
+      
+      .reason-textarea {
+        :deep(.el-textarea__inner) {
+          border-radius: 8px;
+          border: 1px solid #e4e7ed;
+          transition: all 0.3s;
+          
+          &:focus {
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+          }
+        }
+      }
+    }
+  }
+  
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    
+    .cancel-btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      color: #606266;
+      border-color: #dcdfe6;
+    }
+    
+    .confirm-btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
 }
 
-.rank-card {
-  margin-bottom: 20px;
-  width: 200px;
-}
-
-.rank-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px 0;
-}
-
-.rank-number {
-  font-size: 48px;
-  font-weight: bold;
-  color: #409eff;
-}
-
-.rank-total {
-  font-size: 14px;
-  color: #606266;
-  margin-top: 8px;
-}
-
-.total-number {
-  font-weight: bold;
-  color: #e6a23c;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
+// 响应式设计
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    
+    .rank-widget {
+      width: 100%;
+    }
+  }
+  
+  .search-form {
+    .form-row {
+      .form-item {
+        width: 100%;
+        
+        &.date-range {
+          min-width: 100% !important;
+        }
+      }
+      
+      .form-actions {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 12px;
+      }
+    }
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    
+    .action-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 </style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+e: 14px;
+        font-weight: 500;
+
+        &:hover {
+          border-color: #cbd5e1;
+          background: #f8fafc;
+        }
+
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+
+      .send-btn {
+        bordr-radius 12px;
+       background: linear-gradient(35deg, #667eea 0%, #76ba2 100%);
+        border: none;
+        color: white;
+        adding: 10p 24px00;
+        margin-left: auto;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow:  8px 2px rgba(102, 126, 234, 0.4)}
+
+        :disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+}
+
+/* 重命名对话框 */
+.rename-dialog {
+  padding: 8px 0;
+}
+
+/* 动画 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .session-sidebar {
+    width 240px;
+  }
+}
+
+@media (max-widt: 768px) {
+  .ai-chat-page {
+    padding: 0;
+  }
+
+  .chat-cntainer {
+    height: 100h;
+    border-radius: 0;
+    flex-direction: column;
+  }
+
+  .session-sidebar {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .welcome-content {
+    padding: 20px !important;
+
+    .quick-buttons {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  .input-actions {
+    flx-wrap: wap;
+    justify-content: space-between;
+
+   .mode-btn,
+    .preset-btn,
+    .send-btn 
+      flex: 1;
+      min-width: 120px;
+      justify-content: center;
+    }
+  }
+}
