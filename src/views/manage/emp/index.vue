@@ -1,64 +1,86 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="员工名称" prop="userName">
-        <el-input v-model="queryParams.userName" placeholder="请输入员工名称" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
-      <!-- <el-form-item label="角色id" prop="roleId">
-        <el-input v-model="queryParams.roleId" placeholder="请输入角色id" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="角色编号" prop="roleCode">
-        <el-input v-model="queryParams.roleCode" placeholder="请输入角色编号" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="是否启用" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择是否启用" clearable>
-          <el-option v-for="dict in emp_status" :key="dict.value" :label="dict.label" :value="dict.value" />
-        </el-select>
-      </el-form-item> -->
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+  <div class="app-container emp-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="title">
+        <i class="el-icon-s-custom" />
+        <span>员工管理中心</span>
+      </div>
+      <div class="sub-title">统一管理系统员工数据</div>
+    </div>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['manage:emp:add']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate"
-          v-hasPermi="['manage:emp:edit']">修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete"
-          v-hasPermi="['manage:emp:remove']">删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="warning" plain icon="Download" @click="handleExport"
-          v-hasPermi="['manage:emp:export']">导出</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+    <!-- 筛选条件 -->
+    <div class="card search-card" v-show="showSearch">
+      <div class="card-title">
+        <i class="el-icon-filter" />
+        <span>筛选条件</span>
+      </div>
 
-    <el-table v-loading="loading" :data="empList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" type="index" align="center" width="50" />
-      <el-table-column label="员工名称" align="center" prop="userName" />
-      <el-table-column label="归属区域" align="center" prop="regionName" />
-      <el-table-column label="角色" align="center" prop="roleName" />
-      <el-table-column label="联系电话" align="center" prop="mobile" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleUpdate(scope.row)"
+      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="68px" class="search-form">
+        <el-form-item label="员工名称" prop="userName">
+          <el-input v-model="queryParams.userName" placeholder="请输入员工名称" clearable @keyup.enter="handleQuery" />
+        </el-form-item>
+        <!-- <el-form-item label="角色id" prop="roleId">
+          <el-input v-model="queryParams.roleId" placeholder="请输入角色id" clearable @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item label="角色编号" prop="roleCode">
+          <el-input v-model="queryParams.roleCode" placeholder="请输入角色编号" clearable @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item label="是否启用" prop="status">
+          <el-select v-model="queryParams.status" placeholder="请选择是否启用" clearable>
+            <el-option v-for="dict in emp_status" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </el-form-item> -->
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <!-- 表格列表 -->
+    <div class="card table-card">
+      <div class="table-header">
+        <div class="left">
+          <i class="el-icon-document" />
+          <span class="title">员工列表</span>
+          <span class="count">共 {{ total }} 条记录</span>
+        </div>
+
+        <div class="right">
+          <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['manage:emp:add']">新增</el-button>
+          <el-button type="success" icon="Edit" :disabled="single" @click="handleUpdate"
             v-hasPermi="['manage:emp:edit']">修改</el-button>
-          <el-button link type="primary" @click="handleDelete(scope.row)"
+          <el-button type="danger" icon="Delete" :disabled="multiple" @click="handleDelete"
             v-hasPermi="['manage:emp:remove']">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+          <el-button type="warning" icon="Download" @click="handleExport"
+            v-hasPermi="['manage:emp:export']">导出</el-button>
+          <el-button text icon="Refresh" @click="getList">
+            刷新
+          </el-button>
+        </div>
+      </div>
 
-    <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize" @pagination="getList" />
+      <el-table v-loading="loading" :data="empList" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="序号" type="index" align="center" width="50" />
+        <el-table-column label="员工名称" align="center" prop="userName" />
+        <el-table-column label="归属区域" align="center" prop="regionName" />
+        <el-table-column label="角色" align="center" prop="roleName" />
+        <el-table-column label="联系电话" align="center" prop="mobile" />
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <template #default="scope">
+            <el-button link type="primary" @click="handleUpdate(scope.row)"
+              v-hasPermi="['manage:emp:edit']">修改</el-button>
+            <el-button link type="primary" @click="handleDelete(scope.row)"
+              v-hasPermi="['manage:emp:remove']">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize" @pagination="getList" />
+    </div>
 
     <!-- 添加或修改人员列表对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
@@ -283,3 +305,78 @@ getRegionList();
 getRoleList();
 getList();
 </script>
+
+<style scoped lang="scss">
+.emp-page {
+  background: #f5f7fa;
+  padding: 20px;
+
+  .page-header {
+    margin-bottom: 18px;
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sub-title {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #909399;
+    }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .count {
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+
+    .right {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .el-table__header th {
+    background: #fafafa;
+    font-weight: 600;
+  }
+}
+</style>
