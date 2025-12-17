@@ -1,65 +1,92 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="工单编号" prop="taskCode">
-        <el-input v-model="queryParams.taskCode" placeholder="请输入工单编号" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="工单状态" prop="taskStatus">
-        <el-select v-model="queryParams.taskStatus" placeholder="请选择工单状态" clearable>
-          <el-option v-for="dict in task_status" :key="dict.value" :label="dict.label" :value="dict.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="工单类型" prop="productTypeId">
-        <el-select v-model="queryParams.productTypeId" placeholder="请选择工单类型" clearable>
-          <el-option v-for="dict in taskTypeList" :key="dict.typeId" :label="dict.typeName" :value="dict.typeId" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+  <div class="app-container operation-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="title">
+        <i class="el-icon-s-tools" />
+        <span>运维任务管理中心</span>
+      </div>
+      <div class="sub-title">高效管理系统运维任务配置</div>
+    </div>
+    <!-- 筛选条件 -->
+    <div class="card search-card" v-show="showSearch">
+      <div class="card-title">
+        <i class="el-icon-filter" />
+        <span>筛选条件</span>
+      </div>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="68px" class="search-form">
+        <el-form-item label="工单编号" prop="taskCode">
+          <el-input v-model="queryParams.taskCode" placeholder="请输入工单编号" clearable @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item label="工单状态" prop="taskStatus">
+          <el-select v-model="queryParams.taskStatus" placeholder="请选择工单状态" clearable>
+            <el-option v-for="dict in task_status" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="工单类型" prop="productTypeId">
+          <el-select v-model="queryParams.productTypeId" placeholder="请选择工单类型" clearable>
+            <el-option v-for="dict in taskTypeList" :key="dict.typeId" :label="dict.typeName" :value="dict.typeId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
 
-    <el-table v-loading="loading" :data="taskList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" type="index" width="50" align="center" prop="taskId" />
-      <el-table-column label="工单编号" align="center" prop="taskCode" />
-      <el-table-column label="设备编号" align="center" prop="innerCode" />
-      <el-table-column label="工单类型" align="center" prop="taskType.typeName" />
-      <el-table-column label="工单方式" align="center" prop="createType">
-        <template #default="scope">
-          <dict-tag :options="task_create_type" :value="scope.row.createType" />
-        </template>
-      </el-table-column>
-      <el-table-column label="工单状态" align="center" prop="taskStatus">
-        <template #default="scope">
-          <dict-tag :options="task_status" :value="scope.row.taskStatus" />
-        </template>
-      </el-table-column>
-      <el-table-column label="运维人员" align="center" prop="userName" />
-      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
-        <template #default="scope">
-          <span>{{
-            parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}')
-          }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" @click="openTaskDetailDialog(scope.row)">查看详情</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <!-- 表格列表 -->
+    <div class="card table-card">
+      <div class="table-header">
+        <div class="left">
+          <i class="el-icon-document" />
+          <span class="title">运维任务列表</span>
+          <span class="count">共 {{ total }} 条记录</span>
+        </div>
 
-    <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize" @pagination="getList" />
+        <div class="right">
+          <el-button type="primary" icon="Plus" @click="handleAdd">新增</el-button>
+          <el-button text icon="Refresh" @click="getList">
+            刷新
+          </el-button>
+        </div>
+      </div>
+
+      <el-table v-loading="loading" :data="taskList" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="序号" type="index" width="50" align="center" prop="taskId" />
+        <el-table-column label="工单编号" align="center" prop="taskCode" />
+        <el-table-column label="设备编号" align="center" prop="innerCode" />
+        <el-table-column label="工单类型" align="center" prop="taskType.typeName" />
+        <el-table-column label="工单方式" align="center" prop="createType">
+          <template #default="scope">
+            <dict-tag :options="task_create_type" :value="scope.row.createType" />
+          </template>
+        </el-table-column>
+        <el-table-column label="工单状态" align="center" prop="taskStatus">
+          <template #default="scope">
+            <dict-tag :options="task_status" :value="scope.row.taskStatus" />
+          </template>
+        </el-table-column>
+        <el-table-column label="运维人员" align="center" prop="userName" />
+        <el-table-column label="创建时间" align="center" prop="createTime" width="180">
+          <template #default="scope">
+            <span>{{
+              parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}')
+            }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <template #default="scope">
+            <el-button link type="primary" @click="openTaskDetailDialog(scope.row)">查看详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize" @pagination="getList" />
+    </div>
 
     <!-- 添加工单对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
@@ -319,4 +346,79 @@ getTaskTypeList();
 
 getList();
 </script>
+
+<style scoped lang="scss">
+.operation-page {
+  background: #f5f7fa;
+  padding: 20px;
+
+  .page-header {
+    margin-bottom: 18px;
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sub-title {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #909399;
+    }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .count {
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+
+    .right {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .el-table__header th {
+    background: #fafafa;
+    font-weight: 600;
+  }
+}
+</style>
 <style lang="scss" scoped src="./index.scss"></style>

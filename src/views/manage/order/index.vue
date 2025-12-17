@@ -1,75 +1,194 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="订单编号" prop="orderNo">
-        <el-input v-model="queryParams.orderNo" placeholder="请输入订单编号" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="创建时间" style="width: 308px">
-        <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD" type="daterange" range-separator="-"
-          start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+  <div class="app-container order-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="title">
+        <i class="el-icon-s-order" />
+        <span>订单管理中心</span>
+      </div>
+      <div class="sub-title">统一管理系统订单数据</div>
+    </div>
 
+    <!-- 筛选条件 -->
+    <div class="card search-card" v-show="showSearch">
+      <div class="card-title">
+        <i class="el-icon-filter" />
+        <span>筛选条件</span>
+      </div>
 
-    <el-table v-loading="loading" :data="orderList" @selection-change="handleSelectionChange">
-      <el-table-column label="序号" type="index" align="center" prop="id" width="80" />
-      <el-table-column label="订单编号" align="center" prop="orderNo" show-overflow-tooltip="" />
-      <el-table-column label="商品名称" align="center" prop="skuName" />
-      <el-table-column label="订单状态" align="center" prop="status">
-        <template #default="scope">
-          <dict-tag :options="order_status" :value="scope.row.status" />
-        </template>
-      </el-table-column>
-      <el-table-column label="订单金额" align="center" prop="amount" />
-      <el-table-column label="订单时间" align="center" prop="createTime" width="180">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleUpdate(scope.row)"
-            v-hasPermi="['manage:order:query']">查看详情</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+      <el-form
+        ref="queryRef"
+        :model="queryParams"
+        :inline="true"
+        label-width="68px"
+        class="search-form"
+      >
+        <el-form-item label="订单编号" prop="orderNo">
+          <el-input
+            v-model="queryParams.orderNo"
+            placeholder="请输入订单编号"
+            clearable
+            @keyup.enter="handleQuery"
+          />
+        </el-form-item>
 
-    <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize" @pagination="getList" />
+        <el-form-item label="创建时间">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            style="width: 280px"
+          />
+        </el-form-item>
 
-    <!-- 查看详情对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="orderRef" :model="form" :rules="rules" label-width="80px">
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">
+            搜索
+          </el-button>
+          <el-button icon="Refresh" @click="resetQuery">
+            重置
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
 
+    <!-- 表格区 -->
+    <div class="card table-card">
+      <div class="table-header">
+        <div class="left">
+          <i class="el-icon-document" />
+          <span class="title">订单列表</span>
+          <span class="count">共 {{ total }} 条记录</span>
+        </div>
+
+        <div class="right">
+          <el-button text icon="Refresh" @click="getList">
+            刷新
+          </el-button>
+        </div>
+      </div>
+
+      <el-table
+        v-loading="loading"
+        :data="orderList"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column
+          label="序号"
+          type="index"
+          width="80"
+          align="center"
+        />
+
+        <el-table-column
+          label="订单编号"
+          prop="orderNo"
+          align="center"
+          show-overflow-tooltip
+        />
+
+        <el-table-column
+          label="商品名称"
+          prop="skuName"
+          align="center"
+        />
+
+        <el-table-column label="订单状态" prop="status" align="center">
+          <template #default="scope">
+            <dict-tag
+              :options="order_status"
+              :value="scope.row.status"
+            />
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          label="订单金额"
+          prop="amount"
+          align="center"
+        />
+
+        <el-table-column
+          label="订单时间"
+          prop="createTime"
+          width="180"
+          align="center"
+        >
+          <template #default="scope">
+            {{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          label="操作"
+          align="center"
+          width="140"
+          fixed="right"
+        >
+          <template #default="scope">
+            <el-button
+              link
+              type="primary"
+              @click="handleUpdate(scope.row)"
+              v-hasPermi="['manage:order:query']"
+            >
+              查看详情
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <pagination
+        v-show="total > 0"
+        :total="total"
+        v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize"
+        @pagination="getList"
+      />
+    </div>
+
+    <!-- 订单详情 -->
+    <el-dialog
+      :title="title"
+      v-model="open"
+      width="500px"
+      append-to-body
+    >
+      <el-form
+        ref="orderRef"
+        :model="form"
+        :rules="rules"
+        label-width="80px"
+      >
+        <!-- 这里保持你原来的字段结构 -->
       </el-form>
 
       <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </div>
+        <el-button type="primary" @click="submitForm">
+          确 定
+        </el-button>
+        <el-button @click="cancel">
+          取 消
+        </el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup name="Order">
-import { listOrder, getOrder, delOrder, addOrder, updateOrder } from "@/api/manage/order";
+import { listOrder, getOrder } from "@/api/manage/order";
 
 const { proxy } = getCurrentInstance();
-const { order_status } = proxy.useDict('order_status');
+const { order_status } = proxy.useDict("order_status");
 
 const orderList = ref([]);
 const open = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
 const ids = ref([]);
-const single = ref(true);
-const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
 const dateRange = ref([]);
@@ -80,58 +199,116 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     orderNo: null,
-    createTime: null,
+    createTime: null
   },
-  rules: {
-  }
+  rules: {}
 });
 
 const { queryParams, form, rules } = toRefs(data);
 
-
-
-
-/** 查询订单列表 */
+/** 查询订单 */
 function getList() {
   loading.value = true;
-  listOrder(proxy.addDateRange(queryParams.value, dateRange.value)).then(response => {
-    orderList.value = response.rows;
-    total.value = response.total;
-    loading.value = false;
-  });
+  listOrder(proxy.addDateRange(queryParams.value, dateRange.value))
+    .then(res => {
+      orderList.value = res.rows;
+      total.value = res.total;
+      loading.value = false;
+    });
 }
 
-// 取消按钮
-function cancel() {
-  open.value = false;
-  reset();
-}
-
-
-/** 搜索按钮操作 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
   getList();
 }
 
-/** 重置按钮操作 */
 function resetQuery() {
   dateRange.value = [];
   proxy.resetForm("queryRef");
   handleQuery();
 }
 
-
-/** 查看详情操作 */
 function handleUpdate(row) {
-  const _id = row.id || ids.value
-  getOrder(_id).then(response => {
-    form.value = response.data;
+  getOrder(row.id).then(res => {
+    form.value = res.data;
     open.value = true;
     title.value = "订单详情";
   });
 }
 
+function cancel() {
+  open.value = false;
+}
 
 getList();
 </script>
+
+<style scoped lang="scss">
+.order-page {
+  background: #f5f7fa;
+  padding: 20px;
+
+  .page-header {
+    margin-bottom: 18px;
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sub-title {
+      font-size: 13px;
+      color: #909399;
+      margin-top: 4px;
+    }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .count {
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+  }
+
+  .el-table__header th {
+    background: #fafafa;
+    font-weight: 600;
+  }
+}
+</style>

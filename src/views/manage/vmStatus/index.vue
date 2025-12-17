@@ -1,57 +1,89 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="设备编号" prop="innerCode">
-        <el-input v-model="queryParams.innerCode" placeholder="请输入设备编号" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+  <div class="app-container vm-status-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="title">
+        <i class="el-icon-cpu" />
+        <span>设备状态管理中心</span>
+      </div>
+      <div class="sub-title">高效管理系统设备状态监控</div>
+    </div>
+    <!-- 筛选条件 -->
+    <div class="card search-card" v-show="showSearch">
+      <div class="card-title">
+        <i class="el-icon-filter" />
+        <span>筛选条件</span>
+      </div>
 
+      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="68px" class="search-form">
+        <el-form-item label="设备编号" prop="innerCode">
+          <el-input v-model="queryParams.innerCode" placeholder="请输入设备编号" clearable @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
 
-    <el-table v-loading="loading" :data="vmList" @selection-change="handleSelectionChange">
-      <el-table-column label="序号" type="index" width="80" align="center" />
-      <el-table-column label="设备编号" align="center" prop="innerCode" />
-      <el-table-column label="设备型号" align="center" prop="vmTypeId">
-        <template #default="scope">
-          <div v-for="item in vmTypeList" :key="item.id">
-            <span v-if="item.id === scope.row.vmTypeId">{{ item.name }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="详细地址" align="center" prop="addr" show-overflow-tooltip />
-      <el-table-column label="合作商" align="center" prop="partnerId">
-        <template #default="scope">
-          <div v-for="item in partnerList" :key="item.id">
-            <span v-if="item.id === scope.row.partnerId">{{ item.partnerName }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="运营状态" align="center" prop="vmStatus">
-        <template #default="scope">
-          <dict-tag :options="vm_status" :value="scope.row.vmStatus" />
-        </template>
-      </el-table-column>
-      <el-table-column label="设备状态" align="center" prop="vmStatus">
-        <template #default="scope">
-          <span v-if="scope.row.runningStatus != null">
-            {{ JSON.parse(scope.row.runningStatus).status == true ? '正常' : '异常' }}
-          </span>
-          <span v-else>异常</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleUpdate(scope.row)"
-            v-hasPermi="['manage:vm:edit']">查看详情</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <!-- 表格列表 -->
+    <div class="card table-card">
+      <div class="table-header">
+        <div class="left">
+          <i class="el-icon-document" />
+          <span class="title">设备状态列表</span>
+          <span class="count">共 {{ total }} 条记录</span>
+        </div>
 
-    <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize" @pagination="getList" />
+        <div class="right">
+          <el-button text icon="Refresh" @click="getList">
+            刷新
+          </el-button>
+        </div>
+      </div>
+
+      <el-table v-loading="loading" :data="vmList" @selection-change="handleSelectionChange">
+        <el-table-column label="序号" type="index" width="80" align="center" />
+        <el-table-column label="设备编号" align="center" prop="innerCode" />
+        <el-table-column label="设备型号" align="center" prop="vmTypeId">
+          <template #default="scope">
+            <div v-for="item in vmTypeList" :key="item.id">
+              <span v-if="item.id === scope.row.vmTypeId">{{ item.name }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="详细地址" align="center" prop="addr" show-overflow-tooltip />
+        <el-table-column label="合作商" align="center" prop="partnerId">
+          <template #default="scope">
+            <div v-for="item in partnerList" :key="item.id">
+              <span v-if="item.id === scope.row.partnerId">{{ item.partnerName }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="运营状态" align="center" prop="vmStatus">
+          <template #default="scope">
+            <dict-tag :options="vm_status" :value="scope.row.vmStatus" />
+          </template>
+        </el-table-column>
+        <el-table-column label="设备状态" align="center" prop="vmStatus">
+          <template #default="scope">
+            <span v-if="scope.row.runningStatus != null">
+              {{ JSON.parse(scope.row.runningStatus).status == true ? '正常' : '异常' }}
+            </span>
+            <span v-else>异常</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <template #default="scope">
+            <el-button link type="primary" @click="handleUpdate(scope.row)"
+              v-hasPermi="['manage:vm:edit']">查看详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize" @pagination="getList" />
+    </div>
 
     <!-- 查看设备详情对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
@@ -302,3 +334,78 @@ getVmTypeList();
 getPartnerList();
 getList();
 </script>
+
+<style scoped lang="scss">
+.vm-status-page {
+  background: #f5f7fa;
+  padding: 20px;
+
+  .page-header {
+    margin-bottom: 18px;
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sub-title {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #909399;
+    }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .count {
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+
+    .right {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .el-table__header th {
+    background: #fafafa;
+    font-weight: 600;
+  }
+}
+</style>

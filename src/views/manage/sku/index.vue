@@ -1,83 +1,102 @@
 <template>
-  <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="商品名称" prop="skuName">
-        <el-input v-model="queryParams.skuName" placeholder="请输入商品名称" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="商品类型" prop="classId">
-        <el-select v-model="queryParams.classId" placeholder="请选择商品类型" clearable>
-          <el-option v-for="item in skuClassList" :key="item.classId" :label="item.className" :value="item.classId"></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+  <div class="app-container sku-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="title">
+        <i class="el-icon-goods" />
+        <span>商品管理中心</span>
+      </div>
+      <div class="sub-title">高效管理系统商品配置</div>
+    </div>
+    <!-- 筛选条件 -->
+    <div class="card search-card" v-show="showSearch">
+      <div class="card-title">
+        <i class="el-icon-filter" />
+        <span>筛选条件</span>
+      </div>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['manage:sku:add']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate"
-          v-hasPermi="['manage:sku:edit']">修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete"
-          v-hasPermi="['manage:sku:remove']">删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="warning" plain icon="Download" @click="handleExport"
-          v-hasPermi="['manage:sku:export']">导出</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="Upload" @click="handleImport"
-          v-hasPermi="['manage:sku:add']">导入</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="68px" class="search-form">
+        <el-form-item label="商品名称" prop="skuName">
+          <el-input v-model="queryParams.skuName" placeholder="请输入商品名称" clearable @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item label="商品类型" prop="classId">
+          <el-select v-model="queryParams.classId" placeholder="请选择商品类型" clearable>
+            <el-option v-for="item in skuClassList" :key="item.classId" :label="item.className" :value="item.classId"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
 
-    <el-table v-loading="loading" :data="skuList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" type="index" width="50" align="center" prop="skuId" />
-      <el-table-column label="商品名称" align="center" prop="skuName" />
-      <el-table-column label="商品图片" align="center" prop="skuImage" width="100">
-        <template #default="scope">
-          <image-preview :src="scope.row.skuImage" :width="50" :height="50" />
-        </template>
-      </el-table-column>
-      <el-table-column label="品牌" align="center" prop="brandName" />
-      <el-table-column label="规格" align="center" prop="unit" />
-      <el-table-column label="商品价格" width="80" align="center" prop="price">
-        <template #default="scope">
-          <el-tag>{{ formatPrice(scope.row.price) }}元</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="商品类型" align="center" prop="classId">
-        <template #default="scope">
-          <div v-for="item in skuClassList" :key="item.classId">
-            <span v-if="item.classId == scope.row.classId">{{ item.className }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="创建日期" align="center" prop="createTime" width="180">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleUpdate(scope.row)"
+    <!-- 表格列表 -->
+    <div class="card table-card">
+      <div class="table-header">
+        <div class="left">
+          <i class="el-icon-document" />
+          <span class="title">商品列表</span>
+          <span class="count">共 {{ total }} 条记录</span>
+        </div>
+
+        <div class="right">
+          <el-button type="primary" icon="Plus" @click="handleAdd" v-hasPermi="['manage:sku:add']">新增</el-button>
+          <el-button type="success" icon="Edit" :disabled="single" @click="handleUpdate"
             v-hasPermi="['manage:sku:edit']">修改</el-button>
-          <el-button link type="primary" @click="handleDelete(scope.row)"
+          <el-button type="danger" icon="Delete" :disabled="multiple" @click="handleDelete"
             v-hasPermi="['manage:sku:remove']">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+          <el-button type="warning" icon="Download" @click="handleExport"
+            v-hasPermi="['manage:sku:export']">导出</el-button>
+          <el-button type="primary" icon="Upload" @click="handleImport"
+            v-hasPermi="['manage:sku:add']">导入</el-button>
+          <el-button text icon="Refresh" @click="getList">
+            刷新
+          </el-button>
+        </div>
+      </div>
 
-    <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize" @pagination="getList" />
+      <el-table v-loading="loading" :data="skuList" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="序号" type="index" width="50" align="center" prop="skuId" />
+        <el-table-column label="商品名称" align="center" prop="skuName" />
+        <el-table-column label="商品图片" align="center" prop="skuImage" width="100">
+          <template #default="scope">
+            <image-preview :src="scope.row.skuImage" :width="50" :height="50" />
+          </template>
+        </el-table-column>
+        <el-table-column label="品牌" align="center" prop="brandName" />
+        <el-table-column label="规格" align="center" prop="unit" />
+        <el-table-column label="商品价格" width="80" align="center" prop="price">
+          <template #default="scope">
+            <el-tag>{{ formatPrice(scope.row.price) }}元</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="商品类型" align="center" prop="classId">
+          <template #default="scope">
+            <div v-for="item in skuClassList" :key="item.classId">
+              <span v-if="item.classId == scope.row.classId">{{ item.className }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建日期" align="center" prop="createTime" width="180">
+          <template #default="scope">
+            <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+          <template #default="scope">
+            <el-button link type="primary" @click="handleUpdate(scope.row)"
+              v-hasPermi="['manage:sku:edit']">修改</el-button>
+            <el-button link type="primary" @click="handleDelete(scope.row)"
+              v-hasPermi="['manage:sku:remove']">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize" @pagination="getList" />
+    </div>
 
     <!-- 添加或修改商品管理对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
@@ -402,3 +421,78 @@ function getSkuClassList() {
 getSkuClassList();
 getList();
 </script>
+
+<style scoped lang="scss">
+.sku-page {
+  background: #f5f7fa;
+  padding: 20px;
+
+  .page-header {
+    margin-bottom: 18px;
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sub-title {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #909399;
+    }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .count {
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+
+    .right {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .el-table__header th {
+    background: #fafafa;
+    font-weight: 600;
+  }
+}
+</style>

@@ -1,157 +1,194 @@
 <template>
   <div class="app-container home">
-    <el-row :gutter="20">
-      <el-col :span="18">
-        <el-row :gutter="20">
-          <el-col :span="13">
-            <home-user-task-stats />
+    <!-- 第一行：左侧主数据 + 右侧排行榜（同高） -->
+    <el-row
+      :gutter="24"
+      class="home-row home-row-stretch"
+    >
+      <!-- 左侧主区域 -->
+      <el-col :xl="18" :lg="18" :md="24" :sm="24" :xs="24">
+        <!-- 统计卡片 -->
+        <el-row :gutter="20" class="stats-row">
+          <el-col :xl="13" :lg="13" :md="24" :sm="24" :xs="24">
+            <home-user-task-stats class="home-card stats-card" />
           </el-col>
-          <el-col :span="11">
-            <home-sku-sale-stats />
+          <el-col :xl="11" :lg="11" :md="24" :sm="24" :xs="24">
+            <home-sku-sale-stats class="home-card stats-card" />
           </el-col>
         </el-row>
-        <sku-sale-collect-chart />
+
+        <!-- 销售汇总图表 -->
+        <sku-sale-collect-chart class="home-chart-card" />
       </el-col>
-      <el-col :span="6">
-        <sku-sale-rank-chart />
+
+      <!-- 右侧排行榜（强制铺满） -->
+      <el-col
+        :xl="6"
+        :lg="6"
+        :md="24"
+        :sm="24"
+        :xs="24"
+        class="rank-col"
+      >
+        <sku-sale-rank-chart class="home-rank-card rank-full" />
       </el-col>
     </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="14">
-        <partner-node-collect-chart />
+
+    <!-- 第二行 -->
+    <el-row :gutter="24" class="home-row">
+      <el-col :xl="14" :lg="14" :md="24" :sm="24" :xs="24">
+        <partner-node-collect-chart class="home-chart-card" />
       </el-col>
-      <el-col :span="10">
-        <abnormal-equipment-table />
+      <el-col :xl="10" :lg="10" :md="24" :sm="24" :xs="24">
+        <abnormal-equipment-table class="home-table-card" />
       </el-col>
     </el-row>
   </div>
 </template>
 
 <script setup name="Index">
-import HomeUserTaskStats from './components/home-user-task-stats.vue';
-import HomeSkuSaleStats from './components/home-sku-sale-stats.vue';
-import SkuSaleRankChart from './components/sku-sale-rank-chart.vue';
-import SkuSaleCollectChart from './components/sku-sale-collect-chart.vue';
-import PartnerNodeCollectChart from './components/partner-node-collect-chart.vue';
+import HomeUserTaskStats from './components/home-user-task-stats.vue'
+import HomeSkuSaleStats from './components/home-sku-sale-stats.vue'
+import SkuSaleRankChart from './components/sku-sale-rank-chart.vue'
+import SkuSaleCollectChart from './components/sku-sale-collect-chart.vue'
+import PartnerNodeCollectChart from './components/partner-node-collect-chart.vue'
 import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
 </script>
 
 <style scoped lang="scss">
 .home {
-  blockquote {
-    padding: 10px 20px;
-    margin: 0 0 20px;
-    font-size: 17.5px;
-    border-left: 5px solid #eee;
+  padding: 24px;
+  background: linear-gradient(180deg, #f4f6f9 0%, #f5f7fa 100%);
+  min-height: calc(100vh - 60px);
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: #303133;
+
+  /* ================= 行布局 ================= */
+  .home-row {
+    margin-bottom: 24px;
   }
 
-  hr {
-    margin-top: 20px;
+  /* 第一行强制等高 */
+  .home-row-stretch {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .stats-row {
     margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid #eee;
-  }
 
-  .col-item {
-    margin-bottom: 20px;
-  }
-
-  ul {
-    padding: 0;
-    margin: 0;
-  }
-
-  font-family: 'open sans',
-  'Helvetica Neue',
-  Helvetica,
-  Arial,
-  sans-serif;
-  font-size: 13px;
-  color: #676a6c;
-  overflow-x: hidden;
-
-  ul {
-    list-style-type: none;
-  }
-
-  h4 {
-    margin-top: 0px;
-  }
-
-  h2 {
-    margin-top: 10px;
-    font-size: 26px;
-    font-weight: 100;
-  }
-
-  p {
-    margin-top: 10px;
-
-    b {
-      font-weight: 700;
+    .el-col {
+      display: flex;
     }
   }
 
-  .update-log {
-    ol {
-      display: block;
-      list-style-type: decimal;
-      margin-block-start: 1em;
-      margin-block-end: 1em;
-      margin-inline-start: 0;
-      margin-inline-end: 0;
-      padding-inline-start: 40px;
-    }
-  }
-
-  :deep(.box) {
-    padding: 20px;
-    border-radius: 20px;
+  /* ================= 通用卡片 ================= */
+  :deep(.home-card),
+  :deep(.home-chart-card),
+  :deep(.home-rank-card),
+  :deep(.home-table-card) {
+    position: relative;
     background: #fff;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    border-radius: 14px;
+    padding: 20px;
+    width: 100%;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+    transition: all 0.28s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 顶部渐变强调线 */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #409eff, #67c23a);
+      border-radius: 14px 14px 0 0;
+    }
 
     .title,
     .header {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2d3d;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      border-bottom: 1px solid #f0f0f0;
 
-      .el-icon {
-        cursor: pointer;
+      .sub-title {
+        font-size: 12px;
+        color: #909399;
+        margin-left: 8px;
       }
-    }
-
-    .title {
-      align-items: center;
-      flex: 1;
-      font-size: 16px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .sub-title {
-      margin-left: 10px;
-      font-size: 12px;
-      font-weight: 400;
-      color: #999;
     }
   }
 
-  .chart {
-    position: relative;
-    display: inline-block;
-    width: 50%;
+  /* ================= 统计卡片 ================= */
+  :deep(.stats-card) {
+    min-height: 190px;
+    padding: 16px 18px;
+
+    .title {
+      font-size: 15px;
+    }
+  }
+
+  /* ================= 图表卡片 ================= */
+  :deep(.home-chart-card) {
+    min-height: 340px;
+  }
+
+  /* ================= 排行榜：铺满核心 ================= */
+  .rank-col {
+    display: flex;
+  }
+
+  :deep(.rank-full) {
     height: 100%;
   }
 
-  // 防止表格在缩放时变形
-  :deep(.el-row) {
-    min-width: 0;
+  :deep(.home-rank-card) {
+    height: 100%;
+    min-height: unset;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   }
 
-  :deep(.el-col) {
-    min-width: 0;
+  /* ================= 表格 ================= */
+  :deep(.home-table-card) {
+    min-height: 340px;
+
+    .el-table {
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .el-table__header th {
+      background: #fafafa;
+      font-weight: 600;
+      height: 44px;
+    }
+  }
+
+  /* ================= 响应式 ================= */
+  @media (max-width: 1200px) {
+    padding: 18px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px;
+
+    .home-row-stretch {
+      flex-direction: column;
+    }
   }
 }
 </style>
