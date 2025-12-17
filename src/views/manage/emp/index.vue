@@ -20,17 +20,6 @@
         <el-form-item label="员工名称" prop="userName">
           <el-input v-model="queryParams.userName" placeholder="请输入员工名称" clearable @keyup.enter="handleQuery" />
         </el-form-item>
-        <!-- <el-form-item label="角色id" prop="roleId">
-          <el-input v-model="queryParams.roleId" placeholder="请输入角色id" clearable @keyup.enter="handleQuery" />
-        </el-form-item>
-        <el-form-item label="角色编号" prop="roleCode">
-          <el-input v-model="queryParams.roleCode" placeholder="请输入角色编号" clearable @keyup.enter="handleQuery" />
-        </el-form-item>
-        <el-form-item label="是否启用" prop="status">
-          <el-select v-model="queryParams.status" placeholder="请选择是否启用" clearable>
-            <el-option v-for="dict in emp_status" :key="dict.value" :label="dict.label" :value="dict.value" />
-          </el-select>
-        </el-form-item> -->
         <el-form-item>
           <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
           <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -78,11 +67,21 @@
         </el-table-column>
       </el-table>
 
-      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize" @pagination="getList" />
+      <!-- 分页组件：移到表格下方右侧 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="pagination.pageIndex"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total || 0"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
 
-    <!-- 添加或修改人员列表对话框 -->
+    <!-- 添加或修改员工对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="empRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="人员名称" prop="userName">
@@ -90,20 +89,13 @@
         </el-form-item>
         <el-form-item label="角色" prop="roleId">
           <el-select v-model="form.roleId" placeholder="请选择角色" clearable>
-            <el-option v-for="item in roleList" :key="item.id" :label="item.roleName" :value="item.id" />
+            <el-option v-for="item in roleList" :key="item.id" :label="item.roleName" :value="Number(item.id)" />
           </el-select>
         </el-form-item>
         <el-form-item label="联系电话" prop="mobile">
           <el-input v-model="form.mobile" placeholder="请输入联系电话" />
         </el-form-item>
-        <el-form-item label="登录密码" prop="password" v-if="!form.id">
-          <el-input v-model="form.password" type="password" placeholder="请输入登录密码" />
-        </el-form-item>
-        <el-form-item label="创建时间" prop="account" v-if="form.id">
-          {{ form.createTime }}
-        </el-form-item>
         <el-form-item label="负责区域" prop="regionId">
-          <!-- <el-input v-model="form.regionId" placeholder="请输入所属区域Id" /> -->
           <el-select v-model="form.regionId" placeholder="请选择负责区域" clearable>
             <el-option v-for="item in regionList" :key="item.id" :label="item.regionName" :value="item.id" />
           </el-select>
@@ -111,11 +103,8 @@
         <el-form-item label="头像" prop="image">
           <image-upload v-model="form.image" />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
-          </el-radio-group>
+        <el-form-item label="是否启用" prop="status">
+          <el-checkbox v-model="form.status" true-label="1" false-label="0">启用</el-checkbox>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -129,8 +118,9 @@
 </template>
 
 <script setup name="Emp">
+import { ref, reactive, toRefs, getCurrentInstance } from "vue";
 import { listEmp, getEmp, delEmp, addEmp, updateEmp } from "@/api/manage/emp";
-import { listRole } from "../../../api/manage/role";
+import { listRole } from "@/api/manage/role";
 import { loadAllParams } from "@/api/page";
 import { listRegion } from "@/api/manage/region";
 
@@ -147,58 +137,55 @@ const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
 
+// 分页信息
+const pagination = reactive({
+  pageIndex: 1,
+  pageSize: 10,
+});
+
 const data = reactive({
   form: {},
   queryParams: {
-    pageNum: 1,
-    pageSize: 10,
     userName: null,
     roleId: null,
     roleCode: null,
     status: null,
   },
   rules: {
-      userName: [
-        { required: true, message: "员工名称不能为空", trigger: "blur" }
-      ],
-      regionId: [
-        { required: true, message: "所属区域Id不能为空", trigger: "blur" }
-      ],
-      roleId: [
-        { required: true, message: "角色id不能为空", trigger: "blur" }
-      ],
-      mobile: [
-        { required: true, message: "联系电话不能为空", trigger: "blur" }
-      ],
-      password: [
-        { required: true, message: "登录密码不能为空", trigger: "blur", validator: (rule, value, callback) => {
-            if (form.value.id) {
-              // 编辑时密码可选
-              callback();
-            } else {
-              // 新增时密码必填
-              if (!value) {
-                callback(new Error("登录密码不能为空"));
-              } else {
-                callback();
-              }
-            }
-          } }
-      ],
-      image: [
-        { required: true, message: "员工头像不能为空", trigger: "blur" }
-      ],
-    }
+    userName: [{ required: true, message: "员工名称不能为空", trigger: "blur" }],
+    regionId: [{ required: true, message: "所属区域Id不能为空", trigger: "blur" }],
+    roleId: [{ required: true, message: "角色id不能为空", trigger: "change" }],
+    mobile: [{ required: true, message: "联系电话不能为空", trigger: "blur" }],
+    image: [{ required: true, message: "员工头像不能为空", trigger: "blur" }],
+  }
 });
 
 const { queryParams, form, rules } = toRefs(data);
 
-/** 查询人员列表列表 */
+/** 查询员工列表 */
 function getList() {
   loading.value = true;
-  listEmp(queryParams.value).then(response => {
-    empList.value = response.rows;
-    total.value = response.total;
+  const params = {
+    ...queryParams.value,
+    pageNum: pagination.pageIndex,
+    pageSize: pagination.pageSize
+  };
+  // 清除空参数
+  Object.keys(params).forEach(key => {
+    if (params[key] === '' || params[key] === null || params[key] === undefined) {
+      delete params[key];
+    }
+  });
+
+  listEmp(params).then(response => {
+    empList.value = response.rows || [];
+    total.value = Number(response.total) || 0;  // 强制转为数字
+
+    loading.value = false;
+  }).catch(err => {
+    console.error('获取员工列表失败:', err);
+    empList.value = [];
+    total.value = 0;
     loading.value = false;
   });
 }
@@ -220,9 +207,8 @@ function reset() {
     roleCode: null,
     roleName: null,
     mobile: null,
-    password: null,
     image: null,
-    status: null,
+    status: "1", // 默认启用
     createTime: null,
     updateTime: null
   };
@@ -231,20 +217,33 @@ function reset() {
 
 /** 搜索按钮操作 */
 function handleQuery() {
-  queryParams.value.pageNum = 1;
+  pagination.pageIndex = 1;
   getList();
 }
 
 /** 重置按钮操作 */
 function resetQuery() {
   proxy.resetForm("queryRef");
-  handleQuery();
+  pagination.pageIndex = 1;
+  getList();
 }
+
+// 分页大小变化
+const handleSizeChange = (size) => {
+  pagination.pageSize = size;
+  getList();
+};
+
+// 当前页变化
+const handleCurrentChange = (current) => {
+  pagination.pageIndex = current;
+  getList();
+};
 
 // 多选框选中数据
 function handleSelectionChange(selection) {
   ids.value = selection.map(item => item.id);
-  single.value = selection.length != 1;
+  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
 
@@ -252,32 +251,33 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset();
   open.value = true;
-  title.value = "添加人员列表";
+  title.value = "添加员工";
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset();
-  const _id = row.id || ids.value
+  const _id = row.id || ids.value[0];
   getEmp(_id).then(response => {
     form.value = response.data;
+    form.value.roleId = Number(form.value.roleId);
     open.value = true;
-    title.value = "修改人员列表";
+    title.value = "修改员工";
   });
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["empRef"].validate(valid => {
+  proxy.$refs.empRef.validate(valid => {
     if (valid) {
       if (form.value.id != null) {
-        updateEmp(form.value).then(response => {
+        updateEmp(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
         });
       } else {
-        addEmp(form.value).then(response => {
+        addEmp(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
@@ -289,38 +289,38 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _ids = row.id || ids.value;
-  const _names = row ? row.userName : '选中的';
-  proxy.$modal.confirm('是否确认删除员工"' + _names + '"？').then(function () {
+  const _ids = row?.id || ids.value.join(',');
+  const _names = row ? row.userName : '选中的员工';
+  proxy.$modal.confirm(`是否确认删除员工"${_names}"？`).then(() => {
     return delEmp(_ids);
   }).then(() => {
     getList();
     proxy.$modal.msgSuccess("删除成功");
-  }).catch(() => { });
+  }).catch(() => {});
 }
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('manage/emp/export', {
-    ...queryParams.value
-  }, `emp_${new Date().getTime()}.xlsx`)
+  proxy.download('manage/emp/export', { ...queryParams.value }, `emp_${new Date().getTime()}.xlsx`);
 }
 
-//查询角色列表
+// 角色列表
 const roleList = ref([]);
 function getRoleList() {
   listRole(loadAllParams).then(response => {
-    roleList.value = response.rows;
-  });
-}
-const regionList = ref([]);
-//查询区域列表
-function getRegionList() {
-  listRegion(loadAllParams).then(response => {
-    regionList.value = response.rows;
+    roleList.value = response.rows || [];
   });
 }
 
+// 区域列表
+const regionList = ref([]);
+function getRegionList() {
+  listRegion(loadAllParams).then(response => {
+    regionList.value = response.rows || [];
+  });
+}
+
+// 初始化数据
 getRegionList();
 getRoleList();
 getList();
@@ -370,7 +370,7 @@ getList();
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 
     .left {
       display: flex;
@@ -397,6 +397,24 @@ getList();
   .el-table__header th {
     background: #fafafa;
     font-weight: 600;
+  }
+
+  // 分页容器（表格下方）
+  .pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    :deep(.el-pagination__total),
+    :deep(.el-pagination__jump) {
+      color: #606266;
+      font-size: 13px;
+    }
+
+    :deep(.el-pagination__sizes) {
+      margin-right: 16px;
+    }
   }
 }
 </style>

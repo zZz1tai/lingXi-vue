@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询工单角色列表
 export function listRole(query) {
   return request({
-    url: '/manege/role/list',
+    url: '/manage/role/list',
     method: 'get',
     params: query
   })
@@ -12,7 +12,7 @@ export function listRole(query) {
 // 查询工单角色详细
 export function getRole(roleId) {
   return request({
-    url: '/manege/role/' + roleId,
+    url: '/manage/role/' + roleId,
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getRole(roleId) {
 // 新增工单角色
 export function addRole(data) {
   return request({
-    url: '/manege/role',
+    url: '/manage/role',
     method: 'post',
     data: data
   })
@@ -29,7 +29,7 @@ export function addRole(data) {
 // 修改工单角色
 export function updateRole(data) {
   return request({
-    url: '/manege/role',
+    url: '/manage/role',
     method: 'put',
     data: data
   })
@@ -38,7 +38,7 @@ export function updateRole(data) {
 // 删除工单角色
 export function delRole(roleId) {
   return request({
-    url: '/manege/role/' + roleId,
+    url: '/manage/role/' + roleId,
     method: 'delete'
   })
 }

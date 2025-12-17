@@ -148,8 +148,8 @@ const { queryParams, form, rules } = toRefs(data);
 function getList() {
   loading.value = true;
   listRegion(queryParams.value).then(response => {
-    regionList.value = response.rows;
-    total.value = response.total;
+    regionList.value = response.rows || [];
+    total.value = Number(response.total) || 0;
     loading.value = false;
   });
 }

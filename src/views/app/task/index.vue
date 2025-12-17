@@ -482,8 +482,8 @@ const fetchTasks = async () => {
     })
     
     const response = await searchTasks(params)
-    taskList.value = response.rows || []
-    pagination.total = response.total || 0
+  taskList.value = response.rows || []
+  pagination.total = Number(response.total) || 0
   } catch (error) {
     console.error('获取工单列表失败:', error)
     ElMessage.error('获取工单列表失败')

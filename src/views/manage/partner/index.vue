@@ -182,8 +182,8 @@ const { queryParams, form, rules } = toRefs(data);
 function getList() {
   loading.value = true;
   listPartner(queryParams.value).then(response => {
-    partnerList.value = response.rows;
-    total.value = response.total;
+    partnerList.value = response.rows || [];
+    total.value = Number(response.total) || 0;
     loading.value = false;
   });
 }

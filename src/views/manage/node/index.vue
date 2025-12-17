@@ -195,8 +195,8 @@ const { queryParams, form, rules } = toRefs(data);
 function getList() {
   loading.value = true;
   listNode(queryParams.value).then(response => {
-    nodeList.value = response.rows;
-    total.value = response.total;
+    nodeList.value = response.rows || [];
+    total.value = Number(response.total) || 0;
     loading.value = false;
   });
 }

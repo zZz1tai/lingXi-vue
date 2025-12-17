@@ -211,8 +211,8 @@ function getList() {
   loading.value = true;
   listOrder(proxy.addDateRange(queryParams.value, dateRange.value))
     .then(res => {
-      orderList.value = res.rows;
-      total.value = res.total;
+      orderList.value = res.rows || [];
+      total.value = Number(res.total) || 0;
       loading.value = false;
     });
 }

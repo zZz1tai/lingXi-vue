@@ -205,8 +205,8 @@ const { queryParams, form, rules } = toRefs(data);
 function getList() {
   loading.value = true;
   listPolicy(queryParams.value).then(res => {
-    policyList.value = res.rows;
-    total.value = res.total;
+    policyList.value = res.rows || [];
+    total.value = Number(res.total) || 0;
     loading.value = false;
   });
 }

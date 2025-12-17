@@ -120,8 +120,8 @@ const { queryParams, form, rules } = toRefs(data);
 function getList() {
   loading.value = true;
   listSkuClass(queryParams.value).then(response => {
-    skuClassList.value = response.rows;
-    total.value = response.total;
+    skuClassList.value = response.rows || [];
+    total.value = Number(response.total) || 0;
     loading.value = false;
   });
 }

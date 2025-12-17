@@ -222,8 +222,8 @@ function convertYuanToCents(priceInYuan) {
 function getList() {
   loading.value = true;
   listSku(queryParams.value).then(response => {
-    skuList.value = response.rows;
-    total.value = response.total;
+    skuList.value = response.rows || [];
+    total.value = Number(response.total) || 0;
     loading.value = false;
   });
 }

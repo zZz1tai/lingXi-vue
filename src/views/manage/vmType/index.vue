@@ -161,8 +161,8 @@ const { queryParams, form, rules } = toRefs(data);
 function getList() {
   loading.value = true;
   listVmType(queryParams.value).then(response => {
-    vmTypeList.value = response.rows;
-    total.value = response.total;
+    vmTypeList.value = response.rows || [];
+    total.value = Number(response.total) || 0;
     loading.value = false;
   });
 }

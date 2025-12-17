@@ -185,8 +185,8 @@ const { queryParams, form, rules } = toRefs(data);
 function getList() {
   loading.value = true;
   listVm(queryParams.value).then(response => {
-    vmList.value = response.rows;
-    total.value = response.total;
+    vmList.value = response.rows || [];
+    total.value = Number(response.total) || 0;
     loading.value = false;
   });
 }
