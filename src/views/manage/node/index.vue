@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container node-page">
+  <div class="app-container manage-page">
     <!-- 页面标题 -->
     <div class="page-header">
       <div class="title">
@@ -387,77 +387,4 @@ getList();
 
 </script>
 
-<style scoped lang="scss">
-.node-page {
-  background: #f5f7fa;
-  padding: 20px;
-
-  .page-header {
-    margin-bottom: 18px;
-
-    .title {
-      font-size: 20px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sub-title {
-      margin-top: 4px;
-      font-size: 13px;
-      color: #909399;
-    }
-  }
-
-  .card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 18px 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
-  }
-
-  .card-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-
-    .left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .title {
-        font-size: 15px;
-        font-weight: 600;
-      }
-
-      .count {
-        font-size: 13px;
-        color: #909399;
-      }
-    }
-
-    .right {
-      display: flex;
-      gap: 8px;
-    }
-  }
-
-  .el-table__header th {
-    background: #fafafa;
-    font-weight: 600;
-  }
-}
-</style>
+<style scoped lang="scss" src="../index.scss"></style>
