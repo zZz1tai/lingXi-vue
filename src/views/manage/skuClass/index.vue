@@ -69,7 +69,7 @@
     </div>
 
     <!-- 添加或修改商品类型对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-md" append-to-body>
       <el-form ref="skuClassRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="类别名称" prop="className">
           <el-input v-model="form.className" placeholder="请输入类别名称" />

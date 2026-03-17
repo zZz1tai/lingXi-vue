@@ -99,7 +99,7 @@
     </div>
 
     <!-- 添加或修改商品管理对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form ref="skuRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="商品名称" prop="skuName">
           <el-input v-model="form.skuName" placeholder="请输入商品名称" />
@@ -135,7 +135,7 @@
       </template>
     </el-dialog>
     <!-- 数据导入对话框 -->
-    <el-dialog :title="数据导入" v-model="excelOpen" width="400px" append-to-body>
+    <el-dialog :title="数据导入" v-model="excelOpen" class="dialog-md" append-to-body>
 
       <el-upload ref="uploadRef" class="upload-demo" :action="uploadExcelUrl" :headers="headers"
         :on-error="handleUploadError" :on-success="handleUploadSuccess" :before-upload="handleBeforeUpload"

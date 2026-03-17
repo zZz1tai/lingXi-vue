@@ -115,6 +115,20 @@ export const constantRoutes = [
         meta: { title: '工单详情', icon: 'document', activeMenu: '/app/task' }
       }
     ]
+  },
+  // 购物模块路由
+  {
+    path: '/shopping',
+    component: Layout,
+    redirect: '/shopping',
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/shopping/index'),
+        name: 'Shopping',
+        meta: { title: '客户购物', icon: 'shopping' }
+      }
+    ]
   }
 ]
 

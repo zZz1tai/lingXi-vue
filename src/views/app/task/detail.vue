@@ -22,10 +22,10 @@
         <el-descriptions :column="3" border>
           <el-descriptions-item label="工单编号">{{ taskInfo.taskCode }}</el-descriptions-item>
           <el-descriptions-item label="设备编号">{{ taskInfo.innerCode }}</el-descriptions-item>
-          <el-descriptions-item label="工单类型">{{ taskInfo.taskTypeName }}</el-descriptions-item>
+          <el-descriptions-item label="工单类型">{{ taskInfo.taskType?.typeName || '-' }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="getStatusType(taskInfo.status)">
-              {{ getStatusText(taskInfo.status) }}
+            <el-tag :type="getStatusType(taskInfo.taskStatus)">
+              {{ getStatusText(taskInfo.taskStatus) }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="是否维修">{{ taskInfo.isRepair ? '是' : '否' }}</el-descriptions-item>
@@ -78,9 +78,9 @@ const taskInfo = ref(null)
 
 // 状态映射
 const statusMap = {
-  0: { text: '待处理', type: 'warning' },
-  1: { text: '处理中', type: 'primary' },
-  2: { text: '已完成', type: 'success' },
+  1: { text: '待处理', type: 'warning' },
+  2: { text: '处理中', type: 'primary' },
+  4: { text: '已完成', type: 'success' },
   3: { text: '已取消', type: 'danger' }
 }
 

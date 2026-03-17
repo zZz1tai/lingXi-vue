@@ -69,7 +69,7 @@
             <dict-tag :options="task_status" :value="scope.row.taskStatus" />
           </template>
         </el-table-column>
-        <el-table-column label="运维人员" align="center" prop="userName" />
+        <el-table-column label="完成人员" align="center" prop="userName" />
         <el-table-column label="创建时间" align="center" prop="createTime" width="180">
           <template #default="scope">
             <span>{{
@@ -89,7 +89,7 @@
     </div>
 
     <!-- 添加工单对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form ref="taskRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="设备编号" prop="innerCode">
           <el-input v-model="form.innerCode" placeholder="请输入设备编号" @blur="handleCode" />
@@ -99,11 +99,7 @@
             <el-option v-for="dict in taskTypeList" :key="dict.typeId" :label="dict.typeName" :value="dict.typeId" />
           </el-select>
         </el-form-item>
-        <el-form-item label="运维人员：" prop="userId">
-          <el-select v-model="form.userId" placeholder="请选择" :filterable="true">
-            <el-option v-for="(item, index) in userList" :key="index" :label="item.userName" :value="item.id" />
-          </el-select>
-        </el-form-item>
+
         <el-form-item label="备注" prop="desc">
           <el-input type="textarea" v-model="form.desc" placeholder="请输入备注" />
         </el-form-item>
@@ -179,9 +175,7 @@ const data = reactive({
     productTypeId: [
       { required: true, message: '设备类型不能为空', trigger: 'blur' },
     ],
-    userId: [
-      { required: true, message: '人员不能为空', trigger: 'blur' },
-    ],
+
     desc: [
       { required: true, message: '备注不能为空', trigger: 'blur' },
     ]

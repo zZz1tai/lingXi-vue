@@ -1,12 +1,12 @@
 <template>
   <el-dialog
-    width="630px"
     title="补货详情"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     v-model="visible"
     @close="cancel"
     @open="open"
+    class="dialog-lg"
   >
     <el-scrollbar class="scrollbar" style="height: 330px">
       <el-table

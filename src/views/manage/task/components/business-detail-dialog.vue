@@ -1,11 +1,11 @@
 <template>
   <el-dialog
-    width="630px"
     title="工单详情"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     v-model="visible"
     @close="cancel"
+    class="dialog-lg"
   >
     <div class="task-status">
       <img
@@ -48,7 +48,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="运营人员：">
+          <el-form-item label="完成人员：">
             {{ taskDada.userName }}
           </el-form-item>
         </el-col>

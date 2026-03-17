@@ -170,7 +170,7 @@ import { loadAllParams } from "@/api/page";
 import { listNode } from "@/api/manage/node";
 import { listRegion } from "@/api/manage/region";
 import { listPolicy } from "@/api/manage/policy";
-import { ref } from "vue";
+import { ref, getCurrentInstance, reactive, toRefs } from "vue";
 
 const { proxy } = getCurrentInstance();
 const { vm_status } = proxy.useDict('vm_status');
@@ -390,6 +390,10 @@ const goodVisible = ref(false); //货道弹层显示隐藏
 const goodData = ref({}); //货道信息用来拿取 vmTypeId和innerCode
 // 打开货道弹层
 const handleGoods = (row) => {
+  if (!row.vmTypeId || !row.innerCode) {
+    proxy.$modal.msgError('设备信息不完整，无法打开货道设置');
+    return;
+  }
   goodVisible.value = true;
   goodData.value = row;
 };

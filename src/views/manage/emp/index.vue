@@ -20,6 +20,23 @@
         <el-form-item label="员工名称" prop="userName">
           <el-input v-model="queryParams.userName" placeholder="请输入员工名称" clearable @keyup.enter="handleQuery" />
         </el-form-item>
+        <el-form-item label="角色类型" prop="roleId">
+          <el-select v-model="queryParams.roleId" placeholder="请选择角色类型" clearable>
+            <el-option v-for="item in roleList" :key="item.id" :label="item.roleName" :value="Number(item.id)" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="是否启用" prop="status">
+          <el-select v-model="queryParams.status" placeholder="请选择是否启用" clearable>
+            <el-option label="是" value="1" />
+            <el-option label="否" value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="是否绑定" prop="hasUserId">
+          <el-select v-model="queryParams.hasUserId" placeholder="请选择是否绑定账号" clearable>
+            <el-option label="是" value="1" />
+            <el-option label="否" value="0" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
           <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -57,6 +74,18 @@
         <el-table-column label="归属区域" align="center" prop="regionName" />
         <el-table-column label="角色" align="center" prop="roleName" />
         <el-table-column label="联系电话" align="center" prop="mobile" />
+        <el-table-column label="是否启用" align="center">
+          <template #default="scope">
+            <el-tag type="success" v-if="scope.row.status === 1 || scope.row.status === '1'">是</el-tag>
+            <el-tag type="danger" v-else>否</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="是否绑定账号" align="center">
+          <template #default="scope">
+            <el-tag type="success" v-if="scope.row.userId">是</el-tag>
+            <el-tag type="danger" v-else>否</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
             <el-button link type="primary" @click="handleUpdate(scope.row)"
@@ -82,7 +111,7 @@
     </div>
 
     <!-- 添加或修改员工对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form ref="empRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="人员名称" prop="userName">
           <el-input v-model="form.userName" placeholder="请输入人员名称" />
@@ -102,6 +131,11 @@
         </el-form-item>
         <el-form-item label="头像" prop="image">
           <image-upload v-model="form.image" />
+        </el-form-item>
+        <el-form-item label="用户" prop="userId">
+          <el-select v-model="form.userId" placeholder="请选择用户" clearable>
+            <el-option v-for="item in userList" :key="item.userId" :label="`${item.userId} - ${item.userName}`" :value="item.userId" />
+          </el-select>
         </el-form-item>
         <el-form-item label="是否启用" prop="status">
           <el-checkbox v-model="form.status" true-label="1" false-label="0">启用</el-checkbox>
@@ -123,6 +157,7 @@ import { listEmp, getEmp, delEmp, addEmp, updateEmp } from "@/api/manage/emp";
 import { listRole } from "@/api/manage/role";
 import { loadAllParams } from "@/api/page";
 import { listRegion } from "@/api/manage/region";
+import { listUser } from "@/api/system/user";
 
 const { proxy } = getCurrentInstance();
 const { emp_status } = proxy.useDict('emp_status');
@@ -208,6 +243,7 @@ function reset() {
     roleName: null,
     mobile: null,
     image: null,
+    userId: null,
     status: "1", // 默认启用
     createTime: null,
     updateTime: null
@@ -250,8 +286,11 @@ function handleSelectionChange(selection) {
 /** 新增按钮操作 */
 function handleAdd() {
   reset();
-  open.value = true;
-  title.value = "添加员工";
+  // 获取未绑定的用户列表，然后再打开模态框
+  getUserList().then(() => {
+    open.value = true;
+    title.value = "添加员工";
+  });
 }
 
 /** 修改按钮操作 */
@@ -261,8 +300,11 @@ function handleUpdate(row) {
   getEmp(_id).then(response => {
     form.value = response.data;
     form.value.roleId = Number(form.value.roleId);
-    open.value = true;
-    title.value = "修改员工";
+    // 获取未绑定的用户列表，排除当前员工绑定的用户，然后再打开模态框
+    getEditUserList(form.value.userId).then(() => {
+      open.value = true;
+      title.value = "修改员工";
+    });
   });
 }
 
@@ -320,9 +362,67 @@ function getRegionList() {
   });
 }
 
+// 用户列表
+const userList = ref([]);
+// 已绑定的用户列表
+const boundUserIds = ref([]);
+
+// 获取用户列表并过滤掉已绑定的用户
+function getUserList() {
+  return new Promise((resolve, reject) => {
+    // 先获取所有员工，提取已绑定的用户ID
+    listEmp({}).then(empResponse => {
+      const emps = empResponse.rows || [];
+      boundUserIds.value = emps.filter(e => e.userId).map(e => String(e.userId));
+      
+      // 再获取所有用户，过滤掉已绑定的用户
+      listUser(loadAllParams).then(userResponse => {
+        let users = userResponse.rows || [];
+        
+        // 过滤掉已绑定的用户
+        userList.value = users.filter(user => !boundUserIds.value.includes(String(user.userId)));
+        resolve();
+      }).catch(error => {
+        console.error('获取用户列表失败:', error);
+        reject(error);
+      });
+    }).catch(error => {
+      console.error('获取员工列表失败:', error);
+      reject(error);
+    });
+  });
+}
+
+// 编辑时获取用户列表，需要排除当前员工绑定的用户
+function getEditUserList(currentUserId) {
+  return new Promise((resolve, reject) => {
+    // 先获取所有员工，提取已绑定的用户ID
+    listEmp({}).then(empResponse => {
+      const emps = empResponse.rows || [];
+      boundUserIds.value = emps.filter(e => e.userId && String(e.userId) !== String(currentUserId)).map(e => String(e.userId));
+      
+      // 再获取所有用户，过滤掉已绑定的用户
+      listUser(loadAllParams).then(userResponse => {
+        let users = userResponse.rows || [];
+        
+        // 过滤掉已绑定的用户
+        userList.value = users.filter(user => !boundUserIds.value.includes(String(user.userId)));
+        resolve();
+      }).catch(error => {
+        console.error('获取用户列表失败:', error);
+        reject(error);
+      });
+    }).catch(error => {
+      console.error('获取员工列表失败:', error);
+      reject(error);
+    });
+  });
+}
+
 // 初始化数据
 getRegionList();
 getRoleList();
+getUserList();
 getList();
 </script>
 

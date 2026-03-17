@@ -154,7 +154,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="500px"
+      class="dialog-lg"
       append-to-body
     >
       <el-form

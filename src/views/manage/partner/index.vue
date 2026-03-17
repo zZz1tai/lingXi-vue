@@ -83,7 +83,7 @@
     </div>
 
     <!-- 添加或修改合作商管理对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form ref="partnerRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="合作商名称" prop="partnerName">
           <el-input v-model="form.partnerName" placeholder="请输入合作商名称" />
@@ -117,7 +117,7 @@
 
 
     <!-- 查看合作商对话框 -->
-    <el-dialog title="合作商详情" v-model="partnerInfoOpen" width="500px" append-to-body>
+    <el-dialog title="合作商详情" v-model="partnerInfoOpen" class="dialog-lg" append-to-body>
       <el-descriptions column="2" border size="small">
         <el-descriptions-item label="合作商名称">{{ partnerInfo.partnerName || '无' }}</el-descriptions-item>
         <el-descriptions-item label="联系人">{{ partnerInfo.contactPerson || '无' }}</el-descriptions-item>

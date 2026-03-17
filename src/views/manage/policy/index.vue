@@ -148,7 +148,7 @@
     </div>
 
     <!-- 新增 / 编辑 -->
-    <el-dialog :title="title" v-model="open" width="480px">
+    <el-dialog :title="title" v-model="open" class="dialog-md">
       <el-form ref="policyRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="策略名称" prop="policyName">
           <el-input v-model="form.policyName" />

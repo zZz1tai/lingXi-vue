@@ -1,6 +1,5 @@
 <template>
   <el-dialog
-    width="630px"
     title="工单配置"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
@@ -8,6 +7,7 @@
     append-to-body
     @close="cancel"
     @open="open"
+    class="dialog-lg"
   >
     <el-form
       ref="taskRef"

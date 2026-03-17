@@ -156,3 +156,24 @@ export function deleteSessionById(sessionId) {
   });
 }
 
+/**
+ * 生成智能快捷提问
+ * @param {Array} chatHistory 对话历史
+ * @param {string} userId 用户ID
+ * @param {string} userName 用户名
+ * @returns {Promise<Array>}
+ */
+export function generateSmartQuestions(chatHistory, userId, userName) {
+  return request({
+    url: '/api/ai/generate-questions',
+    method: 'post',
+    data: chatHistory,
+    params: {
+      sessionId: getSessionId(),
+      userId: userId,
+      userName: userName
+    },
+    timeout: 30000
+  });
+}
+

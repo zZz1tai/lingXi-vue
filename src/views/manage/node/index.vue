@@ -84,7 +84,7 @@
     </div>
 
     <!-- 添加或修改点位管理对话框 -->
-    <el-dialog :title="title" v-model="open" width="600px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form ref="nodeRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="点位名称" prop="nodeName">
           <el-input v-model="form.nodeName" placeholder="请输入点位名称" />
@@ -122,7 +122,7 @@
     </el-dialog>
 
     <!-- 查看详情对话框 -->
-    <el-dialog title="点位管理" v-model="nodeOpen" width="600px" append-to-body>
+    <el-dialog title="点位管理" v-model="nodeOpen" class="dialog-lg" append-to-body>
       <el-table v-loading="loading" :data="vmList" @selection-change="handleSelectionChange">
         <el-table-column label="序号" type="index" width="55" align="center" />
         <el-table-column label="设备编号" align="center" prop="innerCode" />

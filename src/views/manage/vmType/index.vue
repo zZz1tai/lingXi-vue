@@ -77,7 +77,7 @@
     </div>
 
     <!-- 添加或修改设备类型管理对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form ref="vmTypeRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="型号名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入型号名称" />

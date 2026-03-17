@@ -9,10 +9,26 @@ export function listVm(query) {
   })
 }
 
+// 查询设备管理列表（用于购物界面）
+export function getVendingMachines() {
+  return request({
+    url: '/manage/vm/all',
+    method: 'get'
+  })
+}
+
 // 查询设备管理详细
 export function getVm(id) {
   return request({
     url: '/manage/vm/' + id,
+    method: 'get'
+  })
+}
+
+// 根据设备ID查询货道信息
+export function getChannelsByVmId(vmId) {
+  return request({
+    url: '/manage/vm/channels/' + vmId,
     method: 'get'
   })
 }

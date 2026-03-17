@@ -175,16 +175,17 @@
                   <span>{{ enableDataAnalysis ? '数据分析' : '普通对话' }}</span>
                 </el-button>
                 
-                <el-dropdown @command="usePreset" trigger="click" placement="top-start">
-                  <el-button type="default" class="preset-btn">
+                <el-dropdown @command="usePreset" trigger="click" placement="top-start" :disabled="!hasValidQuestions">
+                  <el-button type="default" class="preset-btn" :disabled="!hasValidQuestions">
                     <el-icon><MagicStick /></el-icon>
                     <span>快捷提问</span>
                   </el-button>
                   <template #dropdown>
                     <el-dropdown-menu>
+                      <!-- 智能生成的快捷提问 -->
                       <el-dropdown-item
-                        v-for="item in presets"
-                        :key="item"
+                        v-for="(item, index) in validQuestions"
+                        :key="index"
                         :command="item"
                         class="preset-item"
                       >
@@ -243,7 +244,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, watch } from 'vue';
+import { ref, computed, nextTick, onMounted, watch } from 'vue';
 import dayjs from 'dayjs';
 import { marked } from 'marked';
 import { ElMessage, ElDialog, ElButton, ElInput, ElIcon, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessageBox } from 'element-plus';
@@ -259,7 +260,7 @@ import {
   ChatDotSquare,
   DataAnalysis
 } from '@element-plus/icons-vue';
-import { chatWithQwen, analyzeDashboard, getChatHistory, saveChatHistory, getSessions, createSession, updateSession, deleteSessionById } from '@/api/ai';
+import { chatWithQwen, analyzeDashboard, getChatHistory, saveChatHistory, getSessions, createSession, updateSession, deleteSessionById, generateSmartQuestions } from '@/api/ai';
 import useUserStore from '@/store/modules/user';
 
 // 配置marked
@@ -286,13 +287,18 @@ const loading = ref(false);
 const error = ref('');
 const enableDataAnalysis = ref(false);
 const chatContainer = ref(null);
+const smartQuestions = ref([]);
+const validQuestions = ref([]);
 
-const presets = [
-  '今天哪些设备需要维修？',
-  '写一段关于无人零售的宣传文案',
-  '今天那些商品卖的比较好？',
-  '给出优化设备运营的建议'
-];
+// 计算是否有有效的快捷提问
+const hasValidQuestions = computed(() => {
+  validQuestions.value = smartQuestions.value.filter(question => {
+    return question && question.trim() !== '';
+  });
+  return validQuestions.value.length > 0;
+});
+
+const presets = [];
 
 // 会话管理相关状态
 const sessions = ref([]);
@@ -357,6 +363,16 @@ const sendMessage = async () => {
     history.value.pop();
   } finally {
     loading.value = false;
+    // 生成智能快捷提问
+    if (history.value.length > 0) {
+      generateSmartQuestions(history.value, userStore.id, userStore.name)
+        .then(res => {
+          smartQuestions.value = res.data || [];
+        })
+        .catch(err => {
+          console.error('生成智能快捷提问失败:', err);
+        });
+    }
   }
 };
 
@@ -424,8 +440,17 @@ const loadChatHistory = async () => {
       }));
       history.value = formattedHistory;
       scrollToBottom();
+      // 生成智能快捷提问
+      generateSmartQuestions(history.value, userStore.id, userStore.name)
+        .then(res => {
+          smartQuestions.value = res.data || [];
+        })
+        .catch(err => {
+          console.error('生成智能快捷提问失败:', err);
+        });
     } else {
       history.value = [];
+      smartQuestions.value = [];
     }
   } catch (err) {
     console.error('加载对话历史失败:', err);
@@ -439,6 +464,7 @@ const createNewSession = async () => {
     const res = await createSession(userStore.id);
     const newSession = res.data;
     sessions.value.unshift(newSession);
+    smartQuestions.value = [];
     switchSession(newSession);
     ElMessage.success('新会话已创建');
   } catch (err) {
@@ -449,6 +475,8 @@ const createNewSession = async () => {
 
 // 切换会话
 const switchSession = async (session) => {
+  // 先清空快捷提问，确保切换过程中不显示残留内容
+  smartQuestions.value = [];
   currentSessionId.value = session.sessionId;
   localStorage.setItem('ai_chat_session_id', session.sessionId);
   await loadChatHistory();
@@ -550,6 +578,7 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@import '@/assets/styles/dialog-styles.scss';
 .ai-chat-page {
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1366,7 +1395,6 @@ onMounted(async () => {
   }
 }
 
-/* 重命名对话框 */
 .rename-dialog {
   padding: 8px 0;
 }

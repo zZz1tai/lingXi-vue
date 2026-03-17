@@ -4,6 +4,7 @@
 @import './element-ui.scss';
 @import './sidebar.scss';
 @import './btn.scss';
+@import './dialog-styles.scss';
 @import './ruoyi.scss';
 
 body {
@@ -215,15 +216,7 @@ aside {
 .arrow-right {
   right: -45px;
 }
-.el-dialog {
-  .el-dialog__body {
-    color: #666;
-  }
-  .dialog-footer {
-    padding-top:30px;
-    text-align: center;
-  }
-}
+
 .home{
   .chart{
     position: relative;

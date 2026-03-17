@@ -70,22 +70,16 @@
                 clearable
                 class="status-select"
               >
-                <el-option label="待处理" value="0">
+                <el-option label="待处理" value="1">
                   <span class="status-option">
                     <span class="status-dot dot-warning"></span>
                     待处理
                   </span>
                 </el-option>
-                <el-option label="处理中" value="1">
+                <el-option label="处理中" value="2">
                   <span class="status-option">
                     <span class="status-dot dot-primary"></span>
                     处理中
-                  </span>
-                </el-option>
-                <el-option label="已完成" value="2">
-                  <span class="status-option">
-                    <span class="status-dot dot-success"></span>
-                    已完成
                   </span>
                 </el-option>
                 <el-option label="已取消" value="3">
@@ -94,19 +88,27 @@
                     已取消
                   </span>
                 </el-option>
+                <el-option label="已完成" value="4">
+                  <span class="status-option">
+                    <span class="status-dot dot-success"></span>
+                    已完成
+                  </span>
+                </el-option>
               </el-select>
             </el-form-item>
           </div>
           
           <div class="form-row">
-            <el-form-item label="是否维修" class="form-item">
+            <el-form-item label="工单类型" class="form-item">
               <el-select
-                v-model="searchForm.isRepair"
+                v-model="searchForm.productTypeId"
                 placeholder="请选择"
                 clearable
               >
-                <el-option label="是" value="true" />
-                <el-option label="否" value="false" />
+                <el-option label="投放工单" value="1" />
+                <el-option label="补货工单" value="2" />
+                <el-option label="维修工单" value="3" />
+                <el-option label="撤机工单" value="4" />
               </el-select>
             </el-form-item>
             
@@ -170,8 +172,7 @@
           :data="taskList"
           style="width: 100%"
           :header-cell-style="{ background: '#f8f9fa', color: '#606266' }"
-          :row-style="{ cursor: 'pointer' }"
-          @row-click="(row) => handleDetail(row.id)"
+
           class="task-table"
         >
           <el-table-column prop="taskCode" label="工单编号" min-width="180">
@@ -192,20 +193,24 @@
             </template>
           </el-table-column>
           
-          <el-table-column prop="taskTypeName" label="工单类型" min-width="120" />
+          <el-table-column label="工单类型" min-width="120">
+            <template #default="scope">
+              {{ scope.row.taskType?.typeName || '-' }}
+            </template>
+          </el-table-column>
           
           <el-table-column label="状态" min-width="120">
             <template #default="scope">
               <el-tag
-                :type="getStatusType(scope.row.status)"
+                :type="getStatusType(scope.row.taskStatus)"
                 size="small"
-                :class="`status-tag status-${scope.row.status}`"
+                :class="`status-tag status-${scope.row.taskStatus}`"
               >
-                <el-icon v-if="scope.row.status === 0"><Clock /></el-icon>
-                <el-icon v-if="scope.row.status === 1"><Loading /></el-icon>
-                <el-icon v-if="scope.row.status === 2"><CircleCheck /></el-icon>
-                <el-icon v-if="scope.row.status === 3"><CircleClose /></el-icon>
-                {{ getStatusText(scope.row.status) }}
+                <el-icon v-if="scope.row.taskStatus === 1"><Clock /></el-icon>
+                <el-icon v-if="scope.row.taskStatus === 2"><Loading /></el-icon>
+                <el-icon v-if="scope.row.taskStatus === 4"><CircleCheck /></el-icon>
+                <el-icon v-if="scope.row.taskStatus === 3"><CircleClose /></el-icon>
+                {{ getStatusText(scope.row.taskStatus) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -233,10 +238,10 @@
             <template #default="scope">
               <div class="action-buttons" @click.stop>
                 <el-button
-                  v-if="scope.row.status === 0"
-                  type="primary"
+                  v-if="scope.row.taskStatus === 1"
+                  type="warning"
                   size="small"
-                  @click="handleAccept(scope.row.id)"
+                  @click="handleAccept(scope.row.taskId)"
                   class="action-btn"
                 >
                   <el-icon><Check /></el-icon>
@@ -244,10 +249,10 @@
                 </el-button>
                 
                 <el-button
-                  v-if="scope.row.status === 1"
+                  v-if="scope.row.taskStatus === 2"
                   type="success"
                   size="small"
-                  @click="handleComplete(scope.row.id)"
+                  @click="handleComplete(scope.row.taskId)"
                   class="action-btn"
                 >
                   <el-icon><Finished /></el-icon>
@@ -255,10 +260,10 @@
                 </el-button>
                 
                 <el-button
-                  v-if="scope.row.status === 0 || scope.row.status === 1"
+                  v-if="scope.row.taskStatus === 1 || scope.row.taskStatus === 2"
                   type="danger"
                   size="small"
-                  @click="handleCancel(scope.row.id)"
+                  @click="handleCancel(scope.row.taskId)"
                   class="action-btn"
                 >
                   <el-icon><Close /></el-icon>
@@ -268,7 +273,7 @@
                 <el-button
                   type="info"
                   size="small"
-                  @click="handleDetail(scope.row.id)"
+                  @click="handleDetail(scope.row.taskId)"
                   class="action-btn"
                 >
                   <el-icon><View /></el-icon>
@@ -370,7 +375,7 @@ const searchForm = reactive({
   innerCode: '',
   taskCode: '',
   status: '',
-  isRepair: '',
+  productTypeId: '',
   timeRange: [],
   start: '',
   end: ''
@@ -399,9 +404,9 @@ const cancelForm = reactive({
 
 // 状态映射
 const statusMap = {
-  0: { text: '待处理', type: 'warning', icon: 'Clock' },
-  1: { text: '处理中', type: 'primary', icon: 'Loading' },
-  2: { text: '已完成', type: 'success', icon: 'CircleCheck' },
+  1: { text: '待处理', type: 'warning', icon: 'Clock' },
+  2: { text: '处理中', type: 'primary', icon: 'Loading' },
+  4: { text: '已完成', type: 'success', icon: 'CircleCheck' },
   3: { text: '已取消', type: 'danger', icon: 'CircleClose' }
 }
 
@@ -456,7 +461,7 @@ const resetForm = () => {
     innerCode: '',
     taskCode: '',
     status: '',
-    isRepair: '',
+    productTypeId: '',
     timeRange: [],
     start: '',
     end: ''
@@ -482,8 +487,8 @@ const fetchTasks = async () => {
     })
     
     const response = await searchTasks(params)
-  taskList.value = response.rows || []
-  pagination.total = Number(response.total) || 0
+    taskList.value = response.list || []
+    pagination.total = Number(response.total) || 0
   } catch (error) {
     console.error('获取工单列表失败:', error)
     ElMessage.error('获取工单列表失败')
@@ -519,7 +524,7 @@ const handleAccept = async (taskId) => {
     }
   } catch (error) {
     console.error('接受工单失败:', error)
-    ElMessage.error('接受工单失败')
+    //ElMessage.error('接受工单失败')
   }
 }
 

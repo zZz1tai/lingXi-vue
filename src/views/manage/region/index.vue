@@ -72,7 +72,7 @@
     </div>
 
     <!-- 添加或修改区域管理对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form ref="regionRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="区域名称" prop="regionName">
           <el-input v-model="form.regionName" placeholder="请输入区域名称" />
@@ -90,7 +90,7 @@
     </el-dialog>
 
     <!-- 【核心新增】区域详情对话框（带点位表格） -->
-    <el-dialog title="区域详情" v-model="regionInfoOpen" width="700px" append-to-body>
+    <el-dialog title="区域详情" v-model="regionInfoOpen" class="dialog-xl" append-to-body>
       <!-- 区域基础信息 -->
       <el-form ref="regionRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="区域名称" prop="regionName">

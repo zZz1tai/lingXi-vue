@@ -86,7 +86,7 @@
     </div>
 
     <!-- 查看设备详情对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" class="dialog-lg" append-to-body>
       <el-form :model="form" label-width="100px">
         <el-form-item label="设备编号">
           {{ form.innerCode }}
