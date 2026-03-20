@@ -107,9 +107,12 @@
 
         <el-table-column
           label="订单金额"
-          prop="amount"
           align="center"
-        />
+        >
+          <template #default="scope">
+            {{ (scope.row.amount / 100).toFixed(2) }}
+          </template>
+        </el-table-column>
 
         <el-table-column
           label="订单时间"
@@ -163,15 +166,29 @@
         :rules="rules"
         label-width="80px"
       >
-        <!-- 这里保持你原来的字段结构 -->
+        <el-form-item label="订单编号">
+          {{ form.orderNo }}
+        </el-form-item>
+        <el-form-item label="商品名称">
+          {{ form.skuName }}
+        </el-form-item>
+        <el-form-item label="订单金额">
+          {{ (form.amount / 100).toFixed(2) }}
+        </el-form-item>
+        <el-form-item label="订单状态">
+          <dict-tag :options="order_status" :value="form.status" />
+        </el-form-item>
+        <el-form-item label="支付类型">
+          {{ form.payType === '1' ? '支付宝' : '微信支付' }}
+        </el-form-item>
+        <el-form-item label="订单时间">
+          {{ parseTime(form.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+        </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button type="primary" @click="submitForm">
-          确 定
-        </el-button>
         <el-button @click="cancel">
-          取 消
+          关闭
         </el-button>
       </template>
     </el-dialog>

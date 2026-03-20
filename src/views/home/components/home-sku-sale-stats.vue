@@ -20,13 +20,13 @@
           <div class="item">
             <div class="num color3 text-shadow2">
               {{ 
-                orderAmountNum > 10000 
-                  ? (orderAmountNum / 10000).toFixed(2) 
-                  : orderAmountNum 
+                (orderAmountNum / 100) > 10000 
+                  ? ((orderAmountNum / 100) / 10000).toFixed(2) 
+                  : (orderAmountNum / 100).toFixed(2) 
               }}
             </div>
             <div class="text color4">
-              销售额（{{ orderAmountNum > 10000 ? '万元' : '元' }}）
+              销售额（{{ (orderAmountNum / 100) > 10000 ? '万元' : '元' }}）
             </div>
           </div>
         </div>

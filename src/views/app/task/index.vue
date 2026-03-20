@@ -9,7 +9,7 @@
         </h1>
         <p class="page-subtitle">高效处理您的工单任务</p>
       </div>
-      <el-card class="rank-widget" shadow="hover">
+      <!-- <el-card class="rank-widget" shadow="hover">
         <div class="rank-widget-content">
           <el-icon class="rank-icon"><Trophy /></el-icon>
           <div class="rank-info">
@@ -24,7 +24,7 @@
             </div>
           </div>
         </div>
-      </el-card>
+      </el-card> -->
     </div>
 
     <!-- 主内容区域 -->

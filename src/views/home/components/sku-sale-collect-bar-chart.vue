@@ -141,10 +141,13 @@ const setOption = () => {
   });
 };
 const getSeriesOption = () => {
+  // 将分单位转换为元单位
+  const formattedData = (props.chartOption.seriesData || []).map(value => value / 100);
+  
   return [
     {
       type: 'bar',
-      data: props.chartOption.seriesData,
+      data: formattedData,
       itemStyle: {
         color: itemStyleColor.value,
         barBorderRadius: [4, 4, 0, 0],

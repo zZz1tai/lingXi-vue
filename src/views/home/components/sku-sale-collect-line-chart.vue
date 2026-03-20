@@ -184,10 +184,13 @@ const setOption = () => {
   });
 };
 const getSeriesOption = () => {
+  // 将分单位转换为元单位
+  const formattedData = (props.chartOption.seriesData || []).map(value => value / 100);
+  
   return [
     {
       type: 'line',
-      data: props.chartOption.seriesData,
+      data: formattedData,
       smooth: true,
       lineStyle: {
         color: lineStyleColor.value,

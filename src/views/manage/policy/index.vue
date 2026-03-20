@@ -234,7 +234,11 @@ function handleAdd() {
 }
 
 function handleUpdate(row) {
-  getPolicy(row.policyId || ids.value).then(res => {
+  if (!row || !row.policyId) {
+    // 如果没有传递row参数，或者row.policyId不存在，直接返回
+    return;
+  }
+  getPolicy(row.policyId).then(res => {
     form.value = res.data;
     open.value = true;
     title.value = "修改策略";

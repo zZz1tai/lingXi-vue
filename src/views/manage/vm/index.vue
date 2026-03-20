@@ -283,7 +283,11 @@ function handleAdd() {
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset();
-  const _id = row.id || ids.value
+  if (!row || !row.id) {
+    // 如果没有传递row参数，或者row.id不存在，直接返回
+    return;
+  }
+  const _id = row.id;
   getVm(_id).then(response => {
     form.value = response.data;
     open.value = true;

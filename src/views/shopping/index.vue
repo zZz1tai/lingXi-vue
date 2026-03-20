@@ -39,6 +39,21 @@
         </el-form>
       </div>
 
+      <!-- 策略显示区域 -->
+      <div v-if="selectedVmStrategy" class="strategy-container">
+        <h2 class="strategy-title">售货机策略</h2>
+        <div class="strategy-content">
+          <div class="strategy-item">
+            <span class="strategy-label">策略名称：</span>
+            <span class="strategy-value">{{ selectedVmStrategy.policyName || '无' }}</span>
+          </div>
+          <div class="strategy-item">
+            <span class="strategy-label">策略方案：</span>
+            <span class="strategy-value">{{ selectedVmStrategy.discount ? (selectedVmStrategy.discount / 10) + '折' : '无' }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 商品展示区域 -->
       <div class="products-container">
         <div v-if="loading" class="loading-container">
@@ -52,7 +67,9 @@
             v-for="channel in channels"
             :key="channel.id"
             class="channel-item"
+            :class="{ 'sold-out': channel.currentCapacity === 0 }"
             @click="addToCart(channel)"
+            :disabled="channel.currentCapacity === 0"
           >
             <div class="channel-position">{{ channel.channelCode }}</div>
             <div class="channel-product">
@@ -63,7 +80,11 @@
               />
               <div class="product-info">
                 <h3 class="product-name">{{ channel.sku?.skuName || '无商品' }}</h3>
-                <p class="product-price">¥{{ (channel.sku?.price / 100) || 0 }}</p>
+                <p class="product-price">¥{{ calculatePrice(channel.sku?.price) || 0 }}</p>
+                <p class="product-stock" v-if="channel.sku">库存: {{ channel.currentCapacity || 0 }}</p>
+              </div>
+              <div class="sold-out-overlay" v-if="channel.currentCapacity === 0">
+                <span>售罄</span>
               </div>
             </div>
           </div>
@@ -84,7 +105,7 @@
           >
             <div class="cart-item-info">
               <span class="cart-item-name">{{ item.sku.skuName }}</span>
-              <span class="cart-item-price">¥{{ (item.sku.price / 100) }}</span>
+              <span class="cart-item-price">¥{{ calculatePrice(item.sku.price) }}</span>
             </div>
             <div class="cart-item-quantity">
               <el-button
@@ -112,7 +133,7 @@
           <el-button
             type="primary"
             class="checkout-btn"
-            @click="showPaymentDialog"
+            @click="processPayment"
             :disabled="cart.length === 0"
           >
             结算
@@ -121,37 +142,7 @@
       </div>
     </div>
 
-    <!-- 支付对话框 -->
-    <el-dialog
-      v-model="paymentDialogVisible"
-      title="支付确认"
-      width="400px"
-      align-center
-    >
-      <div class="payment-content">
-        <div class="payment-amount">
-          <span>支付金额：</span>
-          <span class="amount">¥{{ totalAmount }}</span>
-        </div>
-        <div class="payment-method">
-          <h3>选择支付方式</h3>
-          <div class="wechat-pay">
-            <el-radio v-model="paymentMethod" label="wechat" border>
-              <div class="pay-method-item">
-                <img src="/src/assets/images/pay.png" alt="微信支付" class="pay-icon" />
-                <span>微信支付</span>
-              </div>
-            </el-radio>
-          </div>
-        </div>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="paymentDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="processPayment">确认支付</el-button>
-        </span>
-      </template>
-    </el-dialog>
+
 
     <!-- 支付成功提示 -->
     <el-dialog
@@ -181,6 +172,8 @@ import { ElMessage, ElDialog, ElButton, ElInput, ElIcon, ElDropdown, ElDropdownM
 import { ArrowDown, Delete, CircleCheck } from '@element-plus/icons-vue';
 import useUserStore from '@/store/modules/user';
 import { getVendingMachines, getChannelsByVmId } from '@/api/manage/vm';
+import { getPolicy } from '@/api/manage/policy';
+import { addOrder } from '@/api/manage/order';
 
 // 状态管理
 const userStore = useUserStore();
@@ -189,14 +182,14 @@ const selectedVmId = ref('');
 const channels = ref([]);
 const cart = ref([]);
 const loading = ref(false);
-const paymentDialogVisible = ref(false);
 const paymentSuccessVisible = ref(false);
-const paymentMethod = ref('wechat');
+const selectedVmStrategy = ref(null);
 
 // 计算属性
 const totalAmount = computed(() => {
+  const discount = selectedVmStrategy?.discount ? selectedVmStrategy.discount / 100 : 1;
   return (cart.value.reduce((total, item) => {
-    return total + (item.sku.price * item.quantity);
+    return total + (item.sku.price * item.quantity * discount);
   }, 0) / 100).toFixed(2);
 });
 
@@ -221,6 +214,7 @@ const loadVendingMachines = async () => {
     if (vendingMachines.value.length > 0) {
       selectedVmId.value = vendingMachines.value[0].id;
       await loadChannels();
+      await loadVmStrategy(selectedVmId.value);
     }
   } catch (error) {
     ElMessage.error('加载售货机列表失败');
@@ -247,6 +241,7 @@ const loadChannels = async () => {
 // 处理售货机切换
 const handleVmChange = async () => {
   await loadChannels();
+  await loadVmStrategy(selectedVmId.value);
   // 切换售货机时清空购物车
   cart.value = [];
 };
@@ -258,8 +253,17 @@ const addToCart = (channel) => {
     return;
   }
   
+  if (channel.currentCapacity === 0) {
+    ElMessage.warning('该商品已售罄');
+    return;
+  }
+  
   const existingItem = cart.value.find(item => item.channelId === channel.id);
   if (existingItem) {
+    if (existingItem.quantity >= channel.currentCapacity) {
+      ElMessage.warning('已达到库存上限');
+      return;
+    }
     existingItem.quantity++;
   } else {
     cart.value.push({
@@ -280,7 +284,13 @@ const decreaseQuantity = (index) => {
 
 // 增加商品数量
 const increaseQuantity = (index) => {
-  cart.value[index].quantity++;
+  const item = cart.value[index];
+  const channel = channels.value.find(c => c.id === item.channelId);
+  if (channel && item.quantity >= channel.currentCapacity) {
+    ElMessage.warning('已达到库存上限');
+    return;
+  }
+  item.quantity++;
 };
 
 // 从购物车移除商品
@@ -289,29 +299,118 @@ const removeFromCart = (index) => {
   ElMessage.success('商品已从购物车移除');
 };
 
-// 显示支付对话框
-const showPaymentDialog = () => {
+// 处理支付
+const processPayment = async () => {
   if (cart.length === 0) {
     ElMessage.warning('购物车为空');
     return;
   }
-  paymentDialogVisible.value = true;
-};
-
-// 处理支付
-const processPayment = () => {
-  // 模拟支付过程
-  setTimeout(() => {
-    paymentDialogVisible.value = false;
+  
+  try {
+    // 模拟支付过程
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 为每个商品创建单独的订单
+    for (const item of cart.value) {
+      // 构建订单数据
+      const orderData = {
+        id: item.channelId, // 货道ID
+        skuId: item.sku.id,
+        skuName: item.sku.skuName,
+        amount: item.sku.price * item.quantity, // 商品金额
+        price: item.sku.price, // 单价
+        payType: '2', // 固定使用微信支付
+        status: 1, // 支付完成
+        payStatus: 1, // 支付完成
+        innerCode: selectedVmId.value, // 售货机编号
+        regionId: selectedVmStrategy.value?.regionId, // 区域ID
+        regionName: selectedVmStrategy.value?.regionName // 区域名称
+      };
+      
+      // 调用订单创建 API
+      await addOrder(orderData);
+    }
+    
     paymentSuccessVisible.value = true;
-  }, 1000);
+  } catch (error) {
+    ElMessage.error('支付失败，请重试');
+    console.error('支付失败:', error);
+  }
 };
 
 // 重置购物状态
-const resetShopping = () => {
+const resetShopping = async () => {
   paymentSuccessVisible.value = false;
   cart.value = [];
+  // 重新加载货道信息，更新库存状态
+  await loadChannels();
   ElMessage.success('购物已完成');
+};
+
+// 计算价格
+const calculatePrice = (price) => {
+  if (!price) return 0;
+  const discount = selectedVmStrategy?.discount ? selectedVmStrategy.discount / 100 : 1;
+  return ((price * discount) / 100).toFixed(2);
+};
+
+// 加载售货机策略
+const loadVmStrategy = async (vmId) => {
+  try {
+    // 首先获取售货机详情，获取policyId
+    const vm = vendingMachines.value.find(item => item.id === vmId);
+    if (!vm || !vm.policyId || vm.policyId === 'all') {
+      selectedVmStrategy.value = {
+        policyName: '无',
+        discount: null,
+        promotionRules: '无',
+        discountActivities: '无',
+        purchaseLimits: '无',
+        priceMultiplier: 1
+      };
+      return;
+    }
+    
+    // 确保policyId是有效的数字
+    const policyId = Number(vm.policyId);
+    if (isNaN(policyId)) {
+      selectedVmStrategy.value = {
+        policyName: '无',
+        discount: null,
+        promotionRules: '无',
+        discountActivities: '无',
+        purchaseLimits: '无',
+        priceMultiplier: 1
+      };
+      return;
+    }
+    
+    // 根据policyId获取策略详情
+    const res = await getPolicy(policyId);
+    const policy = res.data;
+    
+    // 转换策略信息
+    selectedVmStrategy.value = {
+      policyName: policy.policyName || '无',
+      discount: policy.discount || null,
+      promotionRules: policy.promotionRules || '无',
+      discountActivities: policy.discountActivities || '无',
+      purchaseLimits: policy.purchaseLimits || '无',
+      priceMultiplier: policy.priceMultiplier || 1
+    };
+  } catch (error) {
+    ElMessage.error('加载策略信息失败');
+    console.error('加载策略信息失败:', error);
+    // 加载失败时使用默认策略
+    selectedVmStrategy.value = {
+      policyName: '无',
+      discount: null,
+      promotionRules: '无',
+      discountActivities: '无',
+      purchaseLimits: '无',
+      priceMultiplier: 1
+    };
+  }
 };
 
 // 处理用户操作
@@ -377,6 +476,44 @@ const handleUserAction = (command) => {
   margin-bottom: 24px;
 }
 
+.strategy-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+
+  .strategy-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 16px 0;
+  }
+
+  .strategy-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+
+    .strategy-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .strategy-label {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 500;
+      }
+
+      .strategy-value {
+        font-size: 14px;
+        color: #1e293b;
+      }
+    }
+  }
+}
+
 .products-container {
   background: white;
   padding: 20px;
@@ -407,17 +544,29 @@ const handleUserAction = (command) => {
     gap: 20px;
 
     .channel-item {
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-color: #667eea;
-      }
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          border-color: #667eea;
+        }
+
+        &.sold-out {
+          opacity: 0.6;
+          cursor: not-allowed;
+
+          &:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: #e2e8f0;
+          }
+        }
 
       .channel-position {
         font-size: 12px;
@@ -454,7 +603,34 @@ const handleUserAction = (command) => {
             font-size: 16px;
             font-weight: 600;
             color: #ef4444;
+            margin: 0 0 4px 0;
+          }
+
+          .product-stock {
+            font-size: 12px;
+            color: #64748b;
             margin: 0;
+          }
+        }
+
+        .sold-out-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          z-index: 10;
+
+          span {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ef4444;
+            transform: rotate(-30deg);
           }
         }
       }

@@ -12,7 +12,7 @@ export function listPolicy(query) {
 // 查询策略管理详细
 export function getPolicy(policyId) {
   return request({
-    url: '/manage/policy/' + policyId,
+    url: '/manage/policy/info/' + policyId,
     method: 'get'
   })
 }
