@@ -47,7 +47,7 @@ function back() {
   max-width: 100%;
   margin: 100px auto;
   .pan-back-btn {
-    background: #008489;
+    background: var(--lx-primary);
     color: #fff;
     border: none !important;
   }
@@ -63,7 +63,7 @@ function back() {
   .text-jumbo {
     font-size: 60px;
     font-weight: 700;
-    color: #484848;
+    color: var(--lx-navy);
   }
   .list-unstyled {
     font-size: 14px;
@@ -71,7 +71,7 @@ function back() {
       padding-bottom: 5px;
     }
     a {
-      color: #008489;
+      color: var(--lx-primary);
       text-decoration: none;
       &:hover {
         text-decoration: underline;

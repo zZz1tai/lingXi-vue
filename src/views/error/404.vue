@@ -35,12 +35,12 @@ let message = computed(() => {
 .wscn-http404-container{
   transform: translate(-50%,-50%);
   position: absolute;
-  top: 40%;
+  top: 50%;
   left: 50%;
 }
 .wscn-http404 {
   position: relative;
-  width: 1200px;
+  width: min(1100px, 100vw);
   padding: 0 50px;
   overflow: hidden;
   .pic-404 {
@@ -164,7 +164,7 @@ let message = computed(() => {
       font-size: 32px;
       font-weight: bold;
       line-height: 40px;
-      color: #1482f0;
+      color: var(--lx-primary);
       opacity: 0;
       margin-bottom: 20px;
       animation-name: slideUp;
@@ -199,8 +199,8 @@ let message = computed(() => {
       float: left;
       width: 110px;
       height: 36px;
-      background: #1482f0;
-      border-radius: 100px;
+      background: var(--lx-primary);
+      border-radius: 8px;
       text-align: center;
       color: #ffffff;
       opacity: 0;
@@ -223,5 +223,11 @@ let message = computed(() => {
       }
     }
   }
+}
+
+@media (max-width: 768px) {
+  .wscn-http404 { width: 100vw; padding: 28px; display: flex; flex-direction: column; }
+  .wscn-http404 .pic-404 { width: 100%; max-width: 420px; }
+  .wscn-http404 .bullshit { width: 100%; }
 }
 </style>

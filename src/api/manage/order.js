@@ -42,3 +42,12 @@ export function delOrder(id) {
     method: 'delete'
   })
 }
+
+// 混合推荐商品（5维度加权打分）
+export function getHybridRecommendations(query) {
+  return request({
+    url: '/manage/order/recommend/hybrid',
+    method: 'get',
+    params: query
+  })
+}

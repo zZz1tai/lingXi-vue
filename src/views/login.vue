@@ -1,7 +1,15 @@
 <template>
   <div class="login">
+    <section class="login-brand" aria-label="灵犀终端管理平台介绍">
+      <span class="brand-mark">LINGXI · OPERATIONS</span>
+      <h1>让终端、销售与任务<br>始终保持同一节奏</h1>
+      <p>面向渠道运营团队的一体化数据工作台，快速掌握设备状态、销售趋势和执行进度。</p>
+      <div class="brand-metrics"><span><strong>实时</strong>业务洞察</span><span><strong>统一</strong>终端管理</span><span><strong>智能</strong>任务协同</span></div>
+    </section>
     <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
-      <h3 class="title">灵犀终端管理系统</h3>
+      <span class="form-eyebrow">欢迎回来</span>
+      <h3 class="title">登录灵犀工作台</h3>
+      <p class="form-subtitle">请输入账户信息继续</p>
       <el-form-item prop="username">
         <el-input v-model="loginForm.username" type="text" size="large" auto-complete="off" placeholder="账号">
           <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
@@ -141,24 +149,41 @@ getCookie();
 <style lang='scss' scoped>
 .login {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   height: 100%;
-  background-image: url("../assets/images/login-background2.png");
-  background-size: cover;
+  padding: clamp(32px, 7vw, 112px);
+  background: #0b2539;
+  overflow: hidden;
+  position: relative;
+  &::before, &::after { content: ""; position: absolute; border-radius: 50%; filter: blur(2px); pointer-events: none; }
+  &::before { width: 560px; height: 560px; left: -180px; bottom: -260px; background: radial-gradient(circle, rgba(20,184,166,.28), transparent 68%); }
+  &::after { width: 640px; height: 640px; right: -260px; top: -300px; background: radial-gradient(circle, rgba(56,189,248,.16), transparent 68%); }
 }
+.login-brand { position: relative; z-index: 1; max-width: 620px; color: #fff; }
+.brand-mark, .form-eyebrow { color: #5eead4; font-size: 12px; font-weight: 700; letter-spacing: .16em; }
+.login-brand h1 { margin: 24px 0; font-size: clamp(36px, 4vw, 60px); line-height: 1.16; letter-spacing: -.045em; text-wrap: balance; }
+.login-brand p { max-width: 540px; color: #b9cbd8; font-size: 16px; line-height: 1.9; }
+.brand-metrics { display: flex; gap: 34px; margin-top: 44px; color: #9fb5c5; }
+.brand-metrics span { display: flex; flex-direction: column; gap: 6px; }
+.brand-metrics strong { color: #fff; font-size: 20px; }
 
 .title {
-  margin: 0px auto 30px auto;
-  text-align: center;
-  color: #707070;
+  margin: 8px 0 6px;
+  color: var(--lx-navy);
+  font-size: 27px;
+  letter-spacing: -.03em;
 }
+.form-subtitle { margin: 0 0 28px; color: var(--lx-muted); }
 
 .login-form {
-  border-radius: 6px;
+  position: relative;
+  z-index: 1;
+  border-radius: 20px;
   background: #ffffff;
-  width: 400px;
-  padding: 25px 25px 5px 25px;
+  width: min(440px, 100%);
+  padding: 42px 42px 28px;
+  box-shadow: 0 30px 80px rgba(0, 13, 28, .3);
 
   .el-input {
     height: 40px;
@@ -199,10 +224,17 @@ getCookie();
   bottom: 0;
   width: 100%;
   text-align: center;
-  color: #fff;
+  color: #9fb5c5;
   font-family: Arial;
   font-size: 12px;
   letter-spacing: 1px;
+}
+
+@media (max-width: 900px) {
+  .login { justify-content: center; padding: 24px; }
+  .login-brand { display: none; }
+  .login-form { padding: 34px 26px 20px; }
+  .el-login-footer { position: absolute; }
 }
 
 .login-code-img {

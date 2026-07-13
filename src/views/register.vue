@@ -1,7 +1,13 @@
 <template>
   <div class="register">
+    <section class="register-brand" aria-label="灵犀终端管理平台介绍">
+      <span>LINGXI · OPERATIONS</span>
+      <h1>创建你的灵犀账户</h1>
+      <p>一个账户连接终端、渠道、商品与任务，让团队从第一天起就在同一套数据中协作。</p>
+    </section>
     <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="register-form">
-      <h3 class="title">灵犀终端管理系统</h3>
+      <span class="form-eyebrow">开始使用</span>
+      <h3 class="title">注册灵犀工作台</h3>
       <el-form-item prop="username">
         <el-input v-model="registerForm.username" type="text" size="large" auto-complete="off" placeholder="账号">
           <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
@@ -126,24 +132,29 @@ getCode();
 <style lang='scss' scoped>
 .register {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   height: 100%;
-  background-image: url("../assets/images/login-background2.png");
-  background-size: cover;
+  padding: clamp(32px, 8vw, 128px);
+  background: radial-gradient(circle at 15% 90%, rgba(20,184,166,.28), transparent 34%), #0b2539;
 }
+.register-brand { max-width: 540px; color: #fff; }
+.register-brand span, .form-eyebrow { color: #5eead4; font-size: 12px; font-weight: 700; letter-spacing: .16em; }
+.register-brand h1 { margin: 24px 0 18px; font-size: clamp(38px, 4vw, 58px); letter-spacing: -.04em; }
+.register-brand p { color: #b9cbd8; font-size: 16px; line-height: 1.9; }
 
 .title {
-  margin: 0px auto 30px auto;
-  text-align: center;
-  color: #707070;
+  margin: 8px 0 28px;
+  color: var(--lx-navy);
+  font-size: 27px;
 }
 
 .register-form {
-  border-radius: 6px;
+  border-radius: 20px;
   background: #ffffff;
-  width: 400px;
-  padding: 25px 25px 5px 25px;
+  width: min(440px, 100%);
+  padding: 42px 42px 24px;
+  box-shadow: 0 30px 80px rgba(0,13,28,.3);
 
   .el-input {
     height: 40px;
@@ -158,6 +169,12 @@ getCode();
     width: 14px;
     margin-left: 0px;
   }
+}
+
+@media (max-width: 900px) {
+  .register { justify-content: center; padding: 24px; }
+  .register-brand { display: none; }
+  .register-form { padding: 34px 26px 20px; }
 }
 
 .register-tip {

@@ -54,8 +54,46 @@
         </div>
       </div>
 
+      <!-- 推荐商品区域 -->
+      <div v-if="recommendations.length > 0" class="recommendations-container">
+        <div class="section-header">
+          <h2 class="section-title">为您推荐</h2>
+          <span class="section-subtitle">基于您的购买偏好智能推荐</span>
+        </div>
+        <div class="recommendations-grid">
+          <div
+            v-for="item in recommendations"
+            :key="item.skuId"
+            class="recommendation-item"
+            @click="addRecommendationToCart(item)"
+          >
+            <div class="recommendation-image">
+              <img :src="item.imageUrl || '/src/assets/vm/default_sku.png'" :alt="item.skuName" />
+              <div class="recommendation-score">推荐指数: {{ item.score }}</div>
+            </div>
+            <div class="recommendation-info">
+              <h3 class="recommendation-name">{{ item.skuName }}</h3>
+              <p class="recommendation-price">¥{{ (item.price / 100).toFixed(2) }}</p>
+              <div class="recommendation-reasons">
+                <el-tag v-for="(reason, index) in (item.reasons || []).slice(0, 2)" :key="index" size="small" type="success">
+                  {{ reason }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="store-layout">
       <!-- 商品展示区域 -->
       <div class="products-container">
+        <div class="section-header products-heading">
+          <div>
+            <h2 class="section-title">全部商品</h2>
+            <span class="section-subtitle">{{ channels.length }} 件商品</span>
+          </div>
+          <div class="cart-pill"><el-icon><ShoppingBag /></el-icon>{{ cartItemCount }}</div>
+        </div>
         <div v-if="loading" class="loading-container">
           <p>加载中...</p>
         </div>
@@ -92,8 +130,11 @@
       </div>
 
       <!-- 购物车区域 -->
-      <div class="cart-container">
-        <h2 class="cart-title">购物车</h2>
+      <aside class="cart-container">
+        <div class="cart-heading">
+          <h2 class="cart-title"><el-icon><ShoppingBag /></el-icon>购物车</h2>
+          <span>{{ cartItemCount }} 件</span>
+        </div>
         <div v-if="cart.length === 0" class="empty-cart">
           <el-empty description="购物车为空" />
         </div>
@@ -103,32 +144,31 @@
             :key="index"
             class="cart-item"
           >
+            <img class="cart-item-image" :src="item.sku.skuImage || '/src/assets/vm/default_sku.png'" :alt="item.sku.skuName" />
             <div class="cart-item-info">
               <span class="cart-item-name">{{ item.sku.skuName }}</span>
-              <span class="cart-item-price">¥{{ calculatePrice(item.sku.price) }}</span>
+              <span class="cart-item-price">¥{{ calculatePrice(item.sku.price) }} / 件</span>
             </div>
             <div class="cart-item-quantity">
               <el-button
                 size="small"
                 @click="decreaseQuantity(index)"
-                :disabled="item.quantity <= 1"
               >
                 -</el-button>
               <span class="quantity">{{ item.quantity }}</span>
               <el-button size="small" @click="increaseQuantity(index)">
                 +</el-button>
             </div>
-            <el-button
-              type="danger"
-              size="small"
+            <el-button class="remove-btn" text
               @click="removeFromCart(index)"
             >
               <el-icon><Delete /></el-icon>
             </el-button>
           </div>
-          <div class="cart-total">
-            <span class="total-label">总计：</span>
-            <span class="total-amount">¥{{ totalAmount }}</span>
+          <div class="cart-summary">
+            <div><span>商品小计</span><strong>¥{{ totalAmount }}</strong></div>
+            <div><span>配送费</span><strong class="free">免费</strong></div>
+            <div class="cart-total"><span>合计</span><strong>¥{{ totalAmount }}</strong></div>
           </div>
           <el-button
             type="primary"
@@ -136,9 +176,10 @@
             @click="processPayment"
             :disabled="cart.length === 0"
           >
-            结算
+            去结算
           </el-button>
         </div>
+      </aside>
       </div>
     </div>
 
@@ -169,11 +210,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElDialog, ElButton, ElInput, ElIcon, ElDropdown, ElDropdownMenu, ElDropdownItem, ElSelect, ElOption, ElForm, ElFormItem, ElRadio, ElEmpty } from 'element-plus';
-import { ArrowDown, Delete, CircleCheck } from '@element-plus/icons-vue';
+import { ArrowDown, Delete, CircleCheck, ShoppingBag } from '@element-plus/icons-vue';
 import useUserStore from '@/store/modules/user';
 import { getVendingMachines, getChannelsByVmId } from '@/api/manage/vm';
 import { getPolicy } from '@/api/manage/policy';
-import { addOrder } from '@/api/manage/order';
+import { addOrder, getHybridRecommendations } from '@/api/manage/order';
 
 // 状态管理
 const userStore = useUserStore();
@@ -184,6 +225,9 @@ const cart = ref([]);
 const loading = ref(false);
 const paymentSuccessVisible = ref(false);
 const selectedVmStrategy = ref(null);
+const recommendations = ref([]);
+const recommendationsLoading = ref(false);
+const cartItemCount = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
 
 // 计算属性
 const totalAmount = computed(() => {
@@ -215,6 +259,7 @@ const loadVendingMachines = async () => {
       selectedVmId.value = vendingMachines.value[0].id;
       await loadChannels();
       await loadVmStrategy(selectedVmId.value);
+      await loadRecommendations();
     }
   } catch (error) {
     ElMessage.error('加载售货机列表失败');
@@ -242,8 +287,64 @@ const loadChannels = async () => {
 const handleVmChange = async () => {
   await loadChannels();
   await loadVmStrategy(selectedVmId.value);
+  await loadRecommendations();
   // 切换售货机时清空购物车
   cart.value = [];
+};
+
+// 加载推荐商品
+const loadRecommendations = async () => {
+  if (!selectedVmId.value) return;
+  
+  recommendationsLoading.value = true;
+  try {
+    // 获取当前选中的售货机信息
+    const selectedVm = vendingMachines.value.find(vm => vm.id === selectedVmId.value);
+    const innerCode = selectedVm?.innerCode || '';
+    const regionId = selectedVm?.regionId || selectedVmStrategy.value?.regionId;
+    
+    const res = await getHybridRecommendations({
+      userName: userStore.name || 'guest',
+      innerCode: innerCode,
+      regionId: regionId,
+      limit: 6
+    });
+    recommendations.value = res.data || [];
+  } catch (error) {
+    console.error('加载推荐商品失败:', error);
+    recommendations.value = [];
+  } finally {
+    recommendationsLoading.value = false;
+  }
+};
+
+// 从推荐商品加入购物车
+const addRecommendationToCart = (item) => {
+  // 查找对应的货道
+  const channel = channels.value.find(c => c.sku && c.sku.id === item.skuId);
+  
+  if (channel) {
+    // 如果找到对应货道，使用货道的addToCart逻辑
+    addToCart(channel);
+  } else {
+    // 如果没有对应货道，直接添加到购物车（虚拟商品）
+    const existingItem = cart.value.find(cartItem => cartItem.sku && cartItem.sku.id === item.skuId);
+    if (existingItem) {
+      existingItem.quantity++;
+    } else {
+      cart.value.push({
+        channelId: null,
+        sku: {
+          id: item.skuId,
+          skuName: item.skuName,
+          price: item.price,
+          skuImage: item.imageUrl
+        },
+        quantity: 1
+      });
+    }
+    ElMessage.success(`已将 ${item.skuName} 加入购物车`);
+  }
 };
 
 // 添加商品到购物车
@@ -279,6 +380,8 @@ const addToCart = (channel) => {
 const decreaseQuantity = (index) => {
   if (cart.value[index].quantity > 1) {
     cart.value[index].quantity--;
+  } else {
+    removeFromCart(index);
   }
 };
 
@@ -301,7 +404,7 @@ const removeFromCart = (index) => {
 
 // 处理支付
 const processPayment = async () => {
-  if (cart.length === 0) {
+  if (cart.value.length === 0) {
     ElMessage.warning('购物车为空');
     return;
   }
@@ -463,9 +566,34 @@ const handleUserAction = (command) => {
 }
 
 .shopping-content {
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 24px;
+}
+
+.store-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 24px;
+  align-items: start;
+}
+
+.products-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.cart-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: #15803d;
+  font-weight: 600;
 }
 
 .vm-selector {
@@ -638,18 +766,130 @@ const handleUserAction = (command) => {
   }
 }
 
-.cart-container {
+.recommendations-container {
   background: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
 
+  .section-header {
+    margin-bottom: 20px;
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0 0 4px 0;
+    }
+
+    .section-subtitle {
+      font-size: 14px;
+      color: #64748b;
+    }
+  }
+
+  .recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .recommendation-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: #667eea;
+    }
+
+    .recommendation-image {
+      position: relative;
+      margin-bottom: 12px;
+
+      img {
+        width: 100%;
+        height: 120px;
+        object-fit: contain;
+        border-radius: 4px;
+      }
+
+      .recommendation-score {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(102, 126, 234, 0.9);
+        color: white;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 10px;
+      }
+    }
+
+    .recommendation-info {
+      .recommendation-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: #1e293b;
+        margin: 0 0 8px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .recommendation-price {
+        font-size: 16px;
+        font-weight: 600;
+        color: #ef4444;
+        margin: 0 0 8px 0;
+      }
+
+      .recommendation-reasons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+
+        .el-tag {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+}
+
+.cart-container {
+  background: white;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  margin-bottom: 24px;
+  position: sticky;
+  top: 24px;
+
+  .cart-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #64748b;
+  }
+
   .cart-title {
     font-size: 18px;
     font-weight: 600;
     color: #1e293b;
-    margin: 0 0 20px 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .empty-cart {
@@ -660,8 +900,17 @@ const handleUserAction = (command) => {
     .cart-item {
       display: flex;
       align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 0;
+      gap: 10px;
+      border-bottom: 1px solid #edf0f2;
+
+      .cart-item-image {
+        width: 52px;
+        height: 52px;
+        object-fit: cover;
+        border-radius: 9px;
+        background: #f8fafc;
+      }
 
       &:last-child {
         border-bottom: none;
@@ -669,55 +918,76 @@ const handleUserAction = (command) => {
 
       .cart-item-info {
         flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
 
         .cart-item-name {
           font-size: 14px;
           color: #1e293b;
-          margin-right: 16px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .cart-item-price {
           font-size: 14px;
           font-weight: 500;
-          color: #ef4444;
+          color: #64748b;
         }
       }
 
       .cart-item-quantity {
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin: 0 16px;
+        gap: 5px;
+        margin: 0;
+
+        :deep(.el-button) {
+          width: 26px;
+          height: 26px;
+          padding: 0;
+          border-radius: 7px;
+        }
+
+        :deep(.el-button:last-child) {
+          color: #fff;
+          background: #16a34a;
+          border-color: #16a34a;
+        }
 
         .quantity {
           min-width: 30px;
           text-align: center;
         }
       }
+
+      .remove-btn { color: #ef4444; padding: 4px; }
     }
 
-    .cart-total {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 20px 0;
-      font-size: 16px;
+    .cart-summary {
+      padding-top: 18px;
+      display: grid;
+      gap: 11px;
 
-      .total-label {
-        margin-right: 8px;
-        color: #475569;
-      }
-
-      .total-amount {
-        font-weight: 600;
-        color: #ef4444;
-        font-size: 18px;
-      }
+      > div { display: flex; justify-content: space-between; color: #64748b; }
+      strong { color: #1e293b; }
+      .free { color: #16a34a; }
+      .cart-total { padding-top: 14px; border-top: 1px solid #e5e7eb; font-size: 18px; color: #111827; }
+      .cart-total strong { font-size: 21px; }
     }
 
     .checkout-btn {
       width: 100%;
-      margin-top: 20px;
+      height: 46px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 9px;
+      background: #16a34a;
+      font-weight: 600;
+
+      &:hover { background: #15803d; }
     }
   }
 }
@@ -784,6 +1054,11 @@ const handleUserAction = (command) => {
     padding: 0 12px;
   }
 
+  .recommendations-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
   .channels-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
@@ -797,5 +1072,10 @@ const handleUserAction = (command) => {
       height: 100px;
     }
   }
+}
+
+@media (max-width: 1100px) {
+  .store-layout { grid-template-columns: 1fr; }
+  .cart-container { position: static; }
 }
 </style>

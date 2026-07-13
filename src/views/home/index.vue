@@ -58,10 +58,9 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
 <style scoped lang="scss">
 .home {
   padding: 24px;
-  background: linear-gradient(180deg, #f4f6f9 0%, #f5f7fa 100%);
-  min-height: calc(100vh - 60px);
-  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: #303133;
+  background: var(--lx-canvas);
+  min-height: calc(100dvh - 92px);
+  color: var(--lx-text);
 
   /* ================= 行布局 ================= */
   .home-row {
@@ -89,15 +88,16 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
   :deep(.home-table-card) {
     position: relative;
     background: #fff;
-    border-radius: 14px;
+    border: 1px solid var(--lx-border-soft);
+    border-radius: var(--lx-radius);
     padding: 20px;
     width: 100%;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--lx-shadow-sm);
     transition: all 0.28s ease;
 
     &:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 16px 36px rgba(16, 42, 67, 0.1);
     }
 
     /* 顶部渐变强调线 */
@@ -108,7 +108,7 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, #409eff, #67c23a);
+      background: linear-gradient(90deg, var(--lx-primary), #38b2ac);
       border-radius: 14px 14px 0 0;
     }
 
@@ -116,7 +116,7 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
     .header {
       font-size: 16px;
       font-weight: 600;
-      color: #1f2d3d;
+      color: var(--lx-navy);
       margin-bottom: 16px;
       padding-bottom: 10px;
       display: flex;
@@ -126,7 +126,7 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
 
       .sub-title {
         font-size: 12px;
-        color: #909399;
+        color: var(--lx-muted);
         margin-left: 8px;
       }
     }
@@ -159,7 +159,7 @@ import AbnormalEquipmentTable from './components/abnormal-equipment-table.vue'
   :deep(.home-rank-card) {
     height: 100%;
     min-height: unset;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #f2f8f7 100%);
   }
 
   /* ================= 表格 ================= */

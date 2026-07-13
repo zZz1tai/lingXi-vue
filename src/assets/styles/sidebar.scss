@@ -5,7 +5,7 @@
     transition: margin-left .28s;
     margin-left: $base-sidebar-width;
     position: relative;
-    background-color: #f8fafd;
+    background-color: var(--lx-canvas);
   }
 
   .sidebarHide {
@@ -25,8 +25,8 @@
     left: 0;
     z-index: 1001;
     overflow: hidden;
-    -webkit-box-shadow: 2px 0 6px rgba(0,21,41,.35);
-    box-shadow: 2px 0 6px rgba(0,21,41,.35);
+    border-right: 1px solid rgba(255,255,255,.06);
+    box-shadow: 10px 0 30px rgba(16,42,67,.08);
 
     // reset element-ui css
     .horizontal-collapse-transition {
@@ -47,7 +47,7 @@
 
     &.has-logo {
       .el-scrollbar {
-        height: calc(100% - 50px);
+        height: calc(100% - 56px);
       }
     }
 
@@ -75,6 +75,20 @@
       overflow: hidden !important;
       text-overflow: ellipsis !important;
       white-space: nowrap !important;
+    }
+
+    .el-menu-item, .el-sub-menu__title {
+      height: 46px;
+      line-height: 46px;
+      margin: 4px 10px;
+      border-radius: 9px;
+      font-weight: 500;
+    }
+
+    .el-menu-item.is-active {
+      background: rgba(45, 212, 191, .13) !important;
+      color: #5eead4 !important;
+      font-weight: 700;
     }
 
     .el-menu-item .el-menu-tooltip__trigger {

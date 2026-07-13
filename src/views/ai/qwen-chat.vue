@@ -581,7 +581,7 @@ onMounted(async () => {
 @import '@/assets/styles/dialog-styles.scss';
 .ai-chat-page {
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -638,7 +638,7 @@ onMounted(async () => {
   .new-chat-btn {
     height: 48px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
     border: none;
     color: white;
     font-weight: 500;
@@ -734,7 +734,7 @@ onMounted(async () => {
       }
 
       &.active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
         border-color: transparent;
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 
@@ -861,7 +861,7 @@ onMounted(async () => {
       font-weight: 600;
       color: #1e293b;
       margin-bottom: 12px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -1054,7 +1054,7 @@ onMounted(async () => {
       
       /* 引用块 */
       blockquote {
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #0f766e;
         padding-left: 16px;
         margin: 16px 0;
         color: inherit;
@@ -1094,12 +1094,12 @@ onMounted(async () => {
       
       /* 链接 */
       a {
-        color: #667eea;
+        color: #0f766e;
         text-decoration: none;
         transition: color 0.2s;
         
         &:hover {
-          color: #764ba2;
+          color: #0d9488;
           text-decoration: underline;
         }
       }
@@ -1140,7 +1140,7 @@ onMounted(async () => {
       width: 36px;
       height: 36px;
       border-radius: 10px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1182,7 +1182,7 @@ onMounted(async () => {
     justify-content: flex-end;
 
     .message-sender {
-      color: #667eea;
+      color: #0f766e;
     }
   }
 
@@ -1201,7 +1201,7 @@ onMounted(async () => {
   }
 
   .user-bubble {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
     color: white;
     border-radius: 16px 16px 4px 16px;
     
@@ -1246,7 +1246,7 @@ onMounted(async () => {
     .typing-dot {
       width: 8px;
       height: 8px;
-      background: #667eea;
+      background: #0f766e;
       border-radius: 50%;
       animation: typing 1.4s infinite ease-in-out;
 
@@ -1290,7 +1290,7 @@ onMounted(async () => {
         transition: all 0.3s ease;
 
         &:focus {
-          border-color: #667eea;
+          border-color: #0f766e;
           background: white;
           box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
         }
@@ -1326,12 +1326,12 @@ onMounted(async () => {
         }
 
         &.active-mode {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
           color: white;
           border-color: transparent;
 
           &:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4391 100%);
+            background: linear-gradient(135deg, #0b5e58 0%, #123f50 100%);
           }
         }
 
@@ -1365,7 +1365,7 @@ onMounted(async () => {
 
       .send-btn {
         border-radius: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
         border: none;
         color: white;
         padding: 10px 24px;

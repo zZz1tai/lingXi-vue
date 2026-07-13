@@ -102,14 +102,15 @@ function setLayout() {
 
 <style lang='scss' scoped>
 .navbar {
-  height: 50px;
+  height: 56px;
   overflow: hidden;
   position: relative;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  border-bottom: 1px solid var(--lx-border-soft);
+  box-shadow: 0 4px 20px rgba(16, 42, 67, 0.04);
 
   .hamburger-container {
-    line-height: 46px;
+    line-height: 52px;
     height: 100%;
     float: left;
     cursor: pointer;
@@ -117,7 +118,7 @@ function setLayout() {
     -webkit-tap-highlight-color: transparent;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.025);
+      background: var(--lx-primary-soft);
     }
   }
 
@@ -138,7 +139,7 @@ function setLayout() {
   .right-menu {
     float: right;
     height: 100%;
-    line-height: 50px;
+    line-height: 56px;
     display: flex;
 
     &:focus {
@@ -150,7 +151,7 @@ function setLayout() {
       padding: 0 8px;
       height: 100%;
       font-size: 18px;
-      color: #5a5e66;
+      color: var(--lx-muted);
       vertical-align: text-bottom;
 
       &.hover-effect {
@@ -158,23 +159,26 @@ function setLayout() {
         transition: background 0.3s;
 
         &:hover {
-          background: rgba(0, 0, 0, 0.025);
+          color: var(--lx-primary);
+          background: var(--lx-primary-soft);
         }
       }
     }
 
     .avatar-container {
-      margin-right: 40px;
+      margin-right: 28px;
 
       .avatar-wrapper {
-        margin-top: 5px;
+        margin-top: 8px;
         position: relative;
 
         .user-avatar {
           cursor: pointer;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
+          width: 38px;
+          height: 38px;
+          border: 2px solid #fff;
+          border-radius: 11px;
+          box-shadow: 0 3px 12px rgba(16, 42, 67, .15);
         }
 
         i {
