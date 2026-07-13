@@ -31,11 +31,13 @@
 <script setup>
 import { ref } from 'vue';
 import { chatWithQwen } from '@/api/ai';
+import useUserStore from '@/store/modules/user';
 
 const message = ref('');
 const history = ref([]);
 const loading = ref(false);
 const error = ref('');
+const userStore = useUserStore();
 
 const sendMessage = async () => {
   const content = message.value.trim();
@@ -46,7 +48,7 @@ const sendMessage = async () => {
   loading.value = true;
   history.value.push({ role: 'user', content });
   try {
-    const reply = await chatWithQwen(content);
+    const reply = await chatWithQwen(content, userStore.id, userStore.name);
     history.value.push({ role: 'assistant', content: reply });
     message.value = '';
   } catch (err) {

@@ -25,14 +25,11 @@ export function chatWithQwen(message, userId, userName) {
   return request({
     url: '/api/ai/chat',
     method: 'post',
-    headers: {
-      'Content-Type': 'text/plain;charset=UTF-8',
-    },
-    data: message,
-    params: {
+    data: {
       sessionId: getSessionId(),
       userId: userId,
-      userName: userName
+      userName: userName,
+      message
     },
     timeout: 60000, // 增加超时时间到60秒
   });
@@ -167,8 +164,8 @@ export function generateSmartQuestions(chatHistory, userId, userName) {
   return request({
     url: '/api/ai/generate-questions',
     method: 'post',
-    data: chatHistory,
-    params: {
+    data: {
+      chatHistory,
       sessionId: getSessionId(),
       userId: userId,
       userName: userName
