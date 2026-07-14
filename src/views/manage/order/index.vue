@@ -91,9 +91,11 @@
         />
 
         <el-table-column
-          label="商品名称"
+          label="商品明细"
           prop="skuName"
           align="center"
+          min-width="220"
+          show-overflow-tooltip
         />
 
         <el-table-column label="订单状态" prop="status" align="center">
@@ -169,7 +171,7 @@
         <el-form-item label="订单编号">
           {{ form.orderNo }}
         </el-form-item>
-        <el-form-item label="商品名称">
+        <el-form-item label="商品明细">
           {{ form.skuName }}
         </el-form-item>
         <el-form-item label="订单金额">

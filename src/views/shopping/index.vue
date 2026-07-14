@@ -23,8 +23,8 @@
 
     <!-- 主内容区域 -->
     <div class="shopping-content">
-      <!-- 售货机选择 -->
-      <div class="vm-selector">
+      <!-- 售货机选择与策略 -->
+      <div class="vm-overview">
         <el-form label-position="left" label-width="100px">
           <el-form-item label="选择售货机：">
             <el-select v-model="selectedVmId" @change="handleVmChange" placeholder="请选择售货机" style="width: 300px">
@@ -37,48 +37,16 @@
             </el-select>
           </el-form-item>
         </el-form>
-      </div>
-
-      <!-- 策略显示区域 -->
-      <div v-if="selectedVmStrategy" class="strategy-container">
-        <h2 class="strategy-title">售货机策略</h2>
-        <div class="strategy-content">
-          <div class="strategy-item">
-            <span class="strategy-label">策略名称：</span>
-            <span class="strategy-value">{{ selectedVmStrategy.policyName || '无' }}</span>
-          </div>
-          <div class="strategy-item">
-            <span class="strategy-label">策略方案：</span>
-            <span class="strategy-value">{{ selectedVmStrategy.discount ? (selectedVmStrategy.discount / 10) + '折' : '无' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 推荐商品区域 -->
-      <div v-if="recommendations.length > 0" class="recommendations-container">
-        <div class="section-header">
-          <h2 class="section-title">为您推荐</h2>
-          <span class="section-subtitle">基于您的购买偏好智能推荐</span>
-        </div>
-        <div class="recommendations-grid">
-          <div
-            v-for="item in recommendations"
-            :key="item.skuId"
-            class="recommendation-item"
-            @click="addRecommendationToCart(item)"
-          >
-            <div class="recommendation-image">
-              <img :src="item.imageUrl || '/src/assets/vm/default_sku.png'" :alt="item.skuName" />
-              <div class="recommendation-score">推荐指数: {{ item.score }}</div>
+        <div v-if="selectedVmStrategy" class="strategy-container">
+          <h2 class="strategy-title">售货机策略</h2>
+          <div class="strategy-content">
+            <div class="strategy-item">
+              <span class="strategy-label">策略名称：</span>
+              <span class="strategy-value">{{ selectedVmStrategy.policyName || '无' }}</span>
             </div>
-            <div class="recommendation-info">
-              <h3 class="recommendation-name">{{ item.skuName }}</h3>
-              <p class="recommendation-price">¥{{ (item.price / 100).toFixed(2) }}</p>
-              <div class="recommendation-reasons">
-                <el-tag v-for="(reason, index) in (item.reasons || []).slice(0, 2)" :key="index" size="small" type="success">
-                  {{ reason }}
-                </el-tag>
-              </div>
+            <div class="strategy-item">
+              <span class="strategy-label">策略方案：</span>
+              <span class="strategy-value">{{ selectedVmStrategy.discount ? (selectedVmStrategy.discount / 10) + '折' : '无' }}</span>
             </div>
           </div>
         </div>
@@ -92,7 +60,9 @@
             <h2 class="section-title">全部商品</h2>
             <span class="section-subtitle">{{ channels.length }} 件商品</span>
           </div>
-          <div class="cart-pill"><el-icon><ShoppingBag /></el-icon>{{ cartItemCount }}</div>
+          <div class="cart-pill" role="button" tabindex="0" @click="cartVisible = true">
+            <el-icon><ShoppingBag /></el-icon>{{ cartItemCount }}
+          </div>
         </div>
         <div v-if="loading" class="loading-container">
           <p>加载中...</p>
@@ -100,17 +70,17 @@
         <div v-else-if="!channels.length" class="empty-container">
           <el-empty description="暂无商品" />
         </div>
-        <div v-else class="channels-grid">
+        <div v-else class="channels-grid" :style="vmLayout.cols ? { gridTemplateColumns: `repeat(${vmLayout.cols}, minmax(0, 1fr))` } : undefined">
           <div
             v-for="channel in channels"
             :key="channel.id"
             class="channel-item"
-            :class="{ 'sold-out': channel.currentCapacity === 0 }"
-            @click="addToCart(channel)"
-            :disabled="channel.currentCapacity === 0"
+            :class="{ 'sold-out': Number(channel.currentCapacity) <= 0 }"
+            @click="Number(channel.currentCapacity) > 0 && addToCart(channel)"
           >
             <div class="channel-position">{{ channel.channelCode }}</div>
             <div class="channel-product">
+              <span v-if="isRecommendedSku(channel.sku?.skuId)" class="recommended-badge">推荐</span>
               <img
                 :src="channel.sku?.skuImage || '/src/assets/vm/default_sku.png'"
                 :alt="channel.sku?.skuName"
@@ -121,7 +91,7 @@
                 <p class="product-price">¥{{ calculatePrice(channel.sku?.price) || 0 }}</p>
                 <p class="product-stock" v-if="channel.sku">库存: {{ channel.currentCapacity || 0 }}</p>
               </div>
-              <div class="sold-out-overlay" v-if="channel.currentCapacity === 0">
+              <div class="sold-out-overlay" v-if="Number(channel.currentCapacity) <= 0">
                 <span>售罄</span>
               </div>
             </div>
@@ -129,8 +99,9 @@
         </div>
       </div>
 
-      <!-- 购物车区域 -->
-      <aside class="cart-container">
+      <!-- 购物车抽屉 -->
+      <el-drawer v-model="cartVisible" title="购物车" direction="rtl" size="420px">
+      <aside class="cart-container cart-drawer-content">
         <div class="cart-heading">
           <h2 class="cart-title"><el-icon><ShoppingBag /></el-icon>购物车</h2>
           <span>{{ cartItemCount }} 件</span>
@@ -147,7 +118,15 @@
             <img class="cart-item-image" :src="item.sku.skuImage || '/src/assets/vm/default_sku.png'" :alt="item.sku.skuName" />
             <div class="cart-item-info">
               <span class="cart-item-name">{{ item.sku.skuName }}</span>
-              <span class="cart-item-price">¥{{ calculatePrice(item.sku.price) }} / 件</span>
+              <span class="cart-item-price">
+                <template v-if="hasDiscount">
+                  <del>¥{{ formatMoney(item.sku.price) }}</del>
+                  <strong>¥{{ calculatePrice(item.sku.price) }}</strong>
+                  <em>{{ discountLabel }}</em>
+                </template>
+                <template v-else>¥{{ formatMoney(item.sku.price) }}</template>
+                / 件
+              </span>
             </div>
             <div class="cart-item-quantity">
               <el-button
@@ -166,7 +145,9 @@
             </el-button>
           </div>
           <div class="cart-summary">
-            <div><span>商品小计</span><strong>¥{{ totalAmount }}</strong></div>
+            <div v-if="hasDiscount"><span>折前金额</span><strong>¥{{ originalTotalAmount }}</strong></div>
+            <div v-if="hasDiscount"><span>策略折扣</span><strong class="discount-text">{{ discountLabel }}</strong></div>
+            <div><span>折后小计</span><strong>¥{{ totalAmount }}</strong></div>
             <div><span>配送费</span><strong class="free">免费</strong></div>
             <div class="cart-total"><span>合计</span><strong>¥{{ totalAmount }}</strong></div>
           </div>
@@ -180,6 +161,7 @@
           </el-button>
         </div>
       </aside>
+      </el-drawer>
       </div>
     </div>
 
@@ -209,10 +191,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { ElMessage, ElDialog, ElButton, ElInput, ElIcon, ElDropdown, ElDropdownMenu, ElDropdownItem, ElSelect, ElOption, ElForm, ElFormItem, ElRadio, ElEmpty } from 'element-plus';
+import { ElMessage, ElDialog, ElButton, ElInput, ElIcon, ElDropdown, ElDropdownMenu, ElDropdownItem, ElSelect, ElOption, ElForm, ElFormItem, ElRadio, ElEmpty, ElDrawer } from 'element-plus';
 import { ArrowDown, Delete, CircleCheck, ShoppingBag } from '@element-plus/icons-vue';
 import useUserStore from '@/store/modules/user';
 import { getVendingMachines, getChannelsByVmId } from '@/api/manage/vm';
+import { getVmType } from '@/api/manage/vmType';
 import { getPolicy } from '@/api/manage/policy';
 import { addOrder, getHybridRecommendations } from '@/api/manage/order';
 
@@ -221,7 +204,9 @@ const userStore = useUserStore();
 const vendingMachines = ref([]);
 const selectedVmId = ref('');
 const channels = ref([]);
+const vmLayout = ref({ rows: 0, cols: 0 });
 const cart = ref([]);
+const cartVisible = ref(false);
 const loading = ref(false);
 const paymentSuccessVisible = ref(false);
 const selectedVmStrategy = ref(null);
@@ -229,11 +214,19 @@ const recommendations = ref([]);
 const recommendationsLoading = ref(false);
 const cartItemCount = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
 
+const discountRate = computed(() => {
+  const discount = selectedVmStrategy.value?.discount;
+  return discount && discount > 0 ? discount / 100 : 1;
+});
+const hasDiscount = computed(() => discountRate.value < 1);
+const discountLabel = computed(() => `${(discountRate.value * 10).toFixed(1)}折`);
+const formatMoney = (price) => ((Number(price || 0)) / 100).toFixed(2);
+const originalTotalAmount = computed(() => (cart.value.reduce((total, item) => total + Number(item.sku.price || 0) * item.quantity, 0) / 100).toFixed(2));
+
 // 计算属性
 const totalAmount = computed(() => {
-  const discount = selectedVmStrategy?.discount ? selectedVmStrategy.discount / 100 : 1;
   return (cart.value.reduce((total, item) => {
-    return total + (item.sku.price * item.quantity * discount);
+    return total + (Number(item.sku.price || 0) * item.quantity * discountRate.value);
   }, 0) / 100).toFixed(2);
 });
 
@@ -257,6 +250,7 @@ const loadVendingMachines = async () => {
     vendingMachines.value = res.data || [];
     if (vendingMachines.value.length > 0) {
       selectedVmId.value = vendingMachines.value[0].id;
+      await loadVmLayout(vendingMachines.value[0]);
       await loadChannels();
       await loadVmStrategy(selectedVmId.value);
       await loadRecommendations();
@@ -285,6 +279,7 @@ const loadChannels = async () => {
 
 // 处理售货机切换
 const handleVmChange = async () => {
+  await loadVmLayout(vendingMachines.value.find(vm => vm.id === selectedVmId.value));
   await loadChannels();
   await loadVmStrategy(selectedVmId.value);
   await loadRecommendations();
@@ -309,7 +304,8 @@ const loadRecommendations = async () => {
       regionId: regionId,
       limit: 6
     });
-    recommendations.value = res.data || [];
+    // 推荐结果必须在当前售货机存在有库存货道，否则不展示为可购买推荐
+    recommendations.value = (res.data || []).filter(item => isRecommendedAvailable(item));
   } catch (error) {
     console.error('加载推荐商品失败:', error);
     recommendations.value = [];
@@ -321,31 +317,30 @@ const loadRecommendations = async () => {
 // 从推荐商品加入购物车
 const addRecommendationToCart = (item) => {
   // 查找对应的货道
-  const channel = channels.value.find(c => c.sku && c.sku.id === item.skuId);
+  // 同一商品可能占用多个货道；优先选择仍有库存的货道，不能被已售罄货道“遮蔽”
+  const channel = channels.value.find(c => c.sku && c.sku.skuId === item.skuId && Number(c.currentCapacity) > 0);
   
   if (channel) {
     // 如果找到对应货道，使用货道的addToCart逻辑
     addToCart(channel);
   } else {
-    // 如果没有对应货道，直接添加到购物车（虚拟商品）
-    const existingItem = cart.value.find(cartItem => cartItem.sku && cartItem.sku.id === item.skuId);
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      cart.value.push({
-        channelId: null,
-        sku: {
-          id: item.skuId,
-          skuName: item.skuName,
-          price: item.price,
-          skuImage: item.imageUrl
-        },
-        quantity: 1
-      });
-    }
-    ElMessage.success(`已将 ${item.skuName} 加入购物车`);
+    ElMessage.warning(`${item.skuName} 当前售货机已售罄`);
   }
 };
+
+const loadVmLayout = async (vm) => {
+  try {
+    const res = await getVmType(vm?.vmTypeId);
+    vmLayout.value = { rows: Number(res.data?.vmRow) || 0, cols: Number(res.data?.vmCol) || 0 };
+  } catch (error) {
+    vmLayout.value = { rows: 0, cols: 0 };
+  }
+};
+
+const isRecommendedAvailable = (item) => channels.value.some(c =>
+  c.sku && c.sku.skuId === item.skuId && Number(c.currentCapacity) > 0
+);
+const isRecommendedSku = (skuId) => recommendations.value.some(item => item.skuId === skuId);
 
 // 添加商品到购物车
 const addToCart = (channel) => {
@@ -354,7 +349,7 @@ const addToCart = (channel) => {
     return;
   }
   
-  if (channel.currentCapacity === 0) {
+  if (Number(channel.currentCapacity) <= 0) {
     ElMessage.warning('该商品已售罄');
     return;
   }
@@ -388,8 +383,10 @@ const decreaseQuantity = (index) => {
 // 增加商品数量
 const increaseQuantity = (index) => {
   const item = cart.value[index];
-  const channel = channels.value.find(c => c.id === item.channelId);
-  if (channel && item.quantity >= channel.currentCapacity) {
+  const totalCapacity = channels.value
+    .filter(c => c.sku && c.sku.skuId === item.sku.skuId)
+    .reduce((sum, c) => sum + Math.max(0, Number(c.currentCapacity) || 0), 0);
+  if (item.quantity >= totalCapacity) {
     ElMessage.warning('已达到库存上限');
     return;
   }
@@ -412,28 +409,41 @@ const processPayment = async () => {
   try {
     // 模拟支付过程
     await new Promise(resolve => setTimeout(resolve, 1000));
+    const selectedVm = vendingMachines.value.find(vm => vm.id === selectedVmId.value);
     
-    // 为每个商品创建单独的订单
-    for (const item of cart.value) {
-      // 构建订单数据
-      const orderData = {
-        id: item.channelId, // 货道ID
-        skuId: item.sku.id,
-        skuName: item.sku.skuName,
-        amount: item.sku.price * item.quantity, // 商品金额
-        price: item.sku.price, // 单价
+    const first = cart.value[0];
+    const details = cart.value.flatMap(item => {
+      let remaining = item.quantity;
+      return channels.value
+        .filter(c => c.sku && c.sku.skuId === item.sku.skuId && Number(c.currentCapacity) > 0)
+        .map(c => {
+          const quantity = Math.min(remaining, Number(c.currentCapacity));
+          remaining -= quantity;
+          return quantity > 0 ? {
+            channelId: c.id, skuId: item.sku.skuId, skuName: item.sku.skuName,
+            quantity, price: Math.round(item.sku.price * discountRate.value),
+            amount: Math.round(item.sku.price * quantity * discountRate.value)
+          } : null;
+        }).filter(Boolean);
+    });
+    const orderData = {
+        channelId: first.channelId,
+        skuId: first.sku.skuId,
+        skuName: first.sku.skuName,
+        quantity: cart.value.reduce((sum, item) => sum + item.quantity, 0),
+        amount: Math.round(Number(totalAmount.value) * 100),
+        price: Math.round(Number(totalAmount.value) * 100),
         payType: '2', // 固定使用微信支付
         status: 1, // 支付完成
         payStatus: 1, // 支付完成
-        innerCode: selectedVmId.value, // 售货机编号
+        innerCode: selectedVm?.innerCode || '', // 售货机编号
         regionId: selectedVmStrategy.value?.regionId, // 区域ID
-        regionName: selectedVmStrategy.value?.regionName // 区域名称
-      };
-      
-      // 调用订单创建 API
-      await addOrder(orderData);
-    }
+        regionName: selectedVmStrategy.value?.regionName, // 区域名称
+        details
+    };
+    await addOrder(orderData);
     
+    cartVisible.value = false;
     paymentSuccessVisible.value = true;
   } catch (error) {
     ElMessage.error('支付失败，请重试');
@@ -452,9 +462,7 @@ const resetShopping = async () => {
 
 // 计算价格
 const calculatePrice = (price) => {
-  if (!price) return 0;
-  const discount = selectedVmStrategy?.discount ? selectedVmStrategy.discount / 100 : 1;
-  return ((price * discount) / 100).toFixed(2);
+  return (Number(price || 0) * discountRate.value / 100).toFixed(2);
 };
 
 // 加载售货机策略
@@ -534,6 +542,10 @@ const handleUserAction = (command) => {
 </script>
 
 <style scoped lang="scss">
+  .cart-drawer-content {
+    width: 100%;
+    height: 100%;
+  }
 .shopping-page {
   min-height: 100vh;
   background: #f5f7fa;
@@ -573,8 +585,8 @@ const handleUserAction = (command) => {
 
 .store-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 390px;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
   align-items: start;
 }
 
@@ -596,20 +608,21 @@ const handleUserAction = (command) => {
   font-weight: 600;
 }
 
-.vm-selector {
+.vm-overview {
   background: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  flex-wrap: wrap;
 }
 
 .strategy-container {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
+  flex: 1;
+  order: -1;
 
   .strategy-title {
     font-size: 18px;
@@ -668,13 +681,13 @@ const handleUserAction = (command) => {
 
   .channels-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 20px;
 
     .channel-item {
         border: 1px solid #e2e8f0;
         border-radius: 8px;
-        padding: 16px;
+        padding: 10px;
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
@@ -703,13 +716,26 @@ const handleUserAction = (command) => {
       }
 
       .channel-product {
+        .recommended-badge {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          z-index: 2;
+          padding: 3px 7px;
+          border-radius: 10px;
+          background: #f59e0b;
+          color: #fff;
+          font-size: 11px;
+          font-weight: 600;
+        }
         display: flex;
         flex-direction: column;
         align-items: center;
 
         .product-image {
-          width: 120px;
-          height: 120px;
+          width: min(120px, 100%);
+          height: auto;
+          aspect-ratio: 1;
           object-fit: contain;
           margin-bottom: 12px;
         }
@@ -795,11 +821,17 @@ const handleUserAction = (command) => {
     gap: 16px;
   }
 
-  .recommendation-item {
+      .recommendation-item {
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     padding: 12px;
-    cursor: pointer;
+        cursor: pointer;
+
+        &.recommendation-disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          filter: grayscale(0.8);
+        }
     transition: all 0.3s ease;
     background: #fafafa;
 
@@ -935,6 +967,23 @@ const handleUserAction = (command) => {
           font-size: 14px;
           font-weight: 500;
           color: #64748b;
+
+          del {
+            margin-right: 6px;
+            color: #94a3b8;
+            font-size: 12px;
+          }
+
+          strong {
+            margin-right: 6px;
+            color: #ef4444;
+          }
+
+          em {
+            color: #ef4444;
+            font-size: 11px;
+            font-style: normal;
+          }
         }
       }
 
